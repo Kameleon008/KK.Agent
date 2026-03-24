@@ -1,0 +1,17 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+**/[Bb]in/
+**/[Oo]bj/
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+nuget.config
+*.nuspec
+
+# User-specific
+*.log
+.DS_Store
