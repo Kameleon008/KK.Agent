@@ -1,3 +1,5 @@
+using KK.Agent.Library.Clients;
+using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Configuration;
 using KK.Agent.Library.Configuration.Models;
 
@@ -10,10 +12,16 @@ public static class Program
         ConfigService.Load();
         
         var config = ConfigService.Get<ConfigRoot>();
-        
-        Console.WriteLine($"Agent: {config.Agent.Name}");
-        Console.WriteLine($"Polling Interval: {config.Agent.PollingInterval}ms");
-        Console.WriteLine($"Enabled: {config.Agent.Enabled}");
+
+        var openApiClient = new OpenApiClient(config.Provider);
+
+        var result = await openApiClient.GetModelsAsync();
+
+
+        foreach (var models in result.Data)
+        {
+            Console.WriteLine(models.Id);
+        }
 
         await Task.Delay(100);
     }
