@@ -17,11 +17,14 @@ public static class Program
 
         var result = await openApiClient.GetModelsAsync();
 
-
         foreach (var models in result.Data)
         {
             Console.WriteLine(models.Id);
         }
+
+        var chat = await openApiClient.GetChatCompletionsAsync();
+
+        Console.WriteLine(chat);
 
         await Task.Delay(100);
     }

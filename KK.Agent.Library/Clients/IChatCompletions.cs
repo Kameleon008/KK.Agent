@@ -2,6 +2,6 @@
 {
     internal interface IChatCompletions
     {
-        public Task<T> GetChatCompletionsAsync<T>();
+        public Task<string> GetChatCompletionsAsync();
     }
 }

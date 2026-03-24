@@ -37,13 +37,6 @@ namespace KK.Agent.Library.Clients.OpenApi
             return result;
         }
 
-        public async Task<object> GetChatCompletionsAsync()
-        {
-            var body = new StringContent("", Encoding.UTF8, "application/json");
-            var result = await this._httpClient.PostAsync("/v1/chat/completions", body);
-
-            return result;
-        }
 
         public async Task<object> GetCompletionsAsync()
         {
@@ -61,8 +54,23 @@ namespace KK.Agent.Library.Clients.OpenApi
             return result;
         }
 
-        public Task<T> GetChatCompletionsAsync<T>()
+        public async Task<string> GetChatCompletionsAsync()
         {
+            var body = new ChatCompletionsRequestBuilder()
+                .SetModel(configuration.Model)
+                .AddMessage(
+                    new ChatCompletionsRequest.ChatMessage()
+                    {
+                        Role = "User",
+                        Content = "Hello!"
+                    })
+                .Build()
+                .ToHttpContent();
+
+            var result = await this._httpClient.PostAsync("/v1/chat/completions", body);
+
+            return await result.Content.ReadAsStringAsync();
+
             throw new NotImplementedException();
         }
     }
