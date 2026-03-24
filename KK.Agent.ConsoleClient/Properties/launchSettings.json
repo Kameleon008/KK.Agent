@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "KK.Agent.ConsoleClient": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ENV": "Develop"
+      },
+      "remoteDebugEnabled": true
+    }
+  }
+}
