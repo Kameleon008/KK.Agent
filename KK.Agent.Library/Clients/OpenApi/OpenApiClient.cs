@@ -56,11 +56,15 @@ namespace KK.Agent.Library.Clients.OpenApi
             return result;
         }
 
-        public async Task<ChatCompletionsResponse> GetChatCompletionsAsync(CancellationToken cancelationToken = default)
+        public async Task<ChatCompletionsResponse> GetChatCompletionsAsync(IEnumerable<IChatMessage> messages, CancellationToken cancelationToken = default)
         {
             var body = new ChatCompletionsRequestBuilder()
                 .SetModel(configuration.Model)
-                .AddMessage("user", "HelloWorld!")
+                .AddMessages(messages.Select(message => new ChatCompletionsRequest.ChatMessage()
+                {
+                    Role = message.Role,
+                    Content = message.Content
+                }))
                 .SetStream(false)
                 .Build()
                 .ToHttpContent();
@@ -73,7 +77,7 @@ namespace KK.Agent.Library.Clients.OpenApi
         }
 
 
-        public async IAsyncEnumerable<ChatCompletionsResponse> GetChatCompletionsStreamAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<ChatCompletionsResponse> GetChatCompletionsStreamAsync(IEnumerable<IChatMessage> messages, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var body = new ChatCompletionsRequestBuilder()
                 .SetModel(configuration.Model)

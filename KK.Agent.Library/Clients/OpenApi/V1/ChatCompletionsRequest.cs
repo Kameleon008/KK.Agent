@@ -54,7 +54,7 @@ public class ChatCompletionsRequest
     [JsonProperty("user", NullValueHandling = NullValueHandling.Ignore)]
     public string? User { get; set; }
 
-    public class ChatMessage
+    public class ChatMessage : IChatMessage
     {
 
         [JsonProperty("role", NullValueHandling = NullValueHandling.Ignore)]

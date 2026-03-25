@@ -50,21 +50,12 @@ public class ChatCompletionChoice
 
 public class ChatCompletionMessage
 {
-    /// <summary>
-    /// Role of the message sender (e.g., "assistant", "user", "system").
-    /// </summary>
     [JsonProperty("role", NullValueHandling = NullValueHandling.Ignore)]
     public string Role { get; set; } = string.Empty;
 
-    /// <summary>
-    /// The content of the message, if any.
-    /// </summary>
     [JsonProperty("content", NullValueHandling = NullValueHandling.Ignore)]
-    public string? Content { get; set; }
+    public string Content { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Tool calls made by the model (if applicable).
-    /// </summary>
     [JsonProperty("tool_calls", NullValueHandling = NullValueHandling.Ignore)]
     public ChatCompletionToolCall[]? ToolCalls { get; set; }
 }
@@ -95,6 +86,7 @@ public class ChatCompletionToolCallFunction
 
 public class ChatCompletionUsage
 {
+    [JsonProperty("prompt_tokens", NullValueHandling = NullValueHandling.Ignore)]
     public int PromptTokens { get; set; }
 
     [JsonProperty("completion_tokens", NullValueHandling = NullValueHandling.Ignore)]

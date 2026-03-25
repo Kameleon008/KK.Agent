@@ -1,13 +1,19 @@
 ﻿using KK.Agent.Library.Clients.OpenApi.V1;
-using System.Runtime.CompilerServices;
 
 namespace KK.Agent.Library.Clients
 {
-    internal interface IChatCompletionsApiClient
+    public interface IChatCompletionsApiClient
     {
-        public Task<ChatCompletionsResponse> GetChatCompletionsAsync(CancellationToken cancelationToken);
+        public Task<ChatCompletionsResponse> GetChatCompletionsAsync(IEnumerable<IChatMessage> messages, CancellationToken cancellationToken);
 
-        public IAsyncEnumerable<ChatCompletionsResponse> GetChatCompletionsStreamAsync(CancellationToken cancellationToken);
+        public IAsyncEnumerable<ChatCompletionsResponse> GetChatCompletionsStreamAsync(IEnumerable<IChatMessage> messages, CancellationToken cancellationToken);
 
+    }
+
+    public interface IChatMessage
+    {
+        public string Role { get; set; }
+
+        public string Content { get; set; }
     }
 }
