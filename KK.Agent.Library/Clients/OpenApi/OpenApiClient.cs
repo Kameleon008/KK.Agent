@@ -1,6 +1,7 @@
 ﻿using KK.Agent.Library.Configuration.Models;
 using System.Text;
 using KK.Agent.Library.Clients.OpenApi.Models.V1;
+using KK.Agent.Library.Clients.OpenApi.Models.V1.Builders;
 using Newtonsoft.Json;
 
 namespace KK.Agent.Library.Clients.OpenApi
