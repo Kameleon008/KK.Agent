@@ -2,6 +2,7 @@ using KK.Agent.Library.Agents;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Configuration;
 using KK.Agent.Library.Configuration.Models;
+using KK.Agent.Library.Entities.Examples;
 
 namespace KK.Agent.ConsoleClient;
 
@@ -16,7 +17,7 @@ public static class Program
         var openApiClient = new OpenApiClient(config.Provider);
         var agentConfig = new CognitiveAgentConfig();
 
-        var agent = new CognitiveAgent(agentConfig, openApiClient);
+        var agent = new CognitiveAgent(agentConfig, openApiClient, new LoreDatabaseTools());
 
         var response = await agent.RunAsync("jaka pogoda we wro wariacie? Co słychać na wikipedii?");
 
