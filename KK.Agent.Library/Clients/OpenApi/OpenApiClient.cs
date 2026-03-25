@@ -60,7 +60,7 @@ namespace KK.Agent.Library.Clients.OpenApi
         {
             var body = new ChatCompletionsRequestBuilder()
                 .SetModel(configuration.Model)
-                .AddMessages(messages.Select(message => new ChatCompletionsRequest.ChatMessage()
+                .AddMessages(messages.Select(message => new ChatMessage()
                 {
                     Role = message.Role,
                     Content = message.Content
@@ -76,11 +76,11 @@ namespace KK.Agent.Library.Clients.OpenApi
             return JsonConvert.DeserializeObject<ChatCompletionsResponse>(x);
         }
 
-        public async Task<ChatCompletionsResponse> GetChatCompletionsAsync(IEnumerable<IChatMessage> messages, List<ChatCompletionsRequest.ToolDefinition> tools, CancellationToken cancelationToken = default)
+        public async Task<ChatCompletionsResponse> GetChatCompletionsAsync(IEnumerable<IChatMessage> messages, List<ToolDefinition> tools, CancellationToken cancelationToken = default)
         {
             var body = new ChatCompletionsRequestBuilder()
                 .SetModel(configuration.Model)
-                .AddMessages(messages.Select(message => new ChatCompletionsRequest.ChatMessage()
+                .AddMessages(messages.Select(message => new ChatMessage()
                 {
                     Role = message.Role,
                     Content = message.Content

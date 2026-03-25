@@ -6,7 +6,7 @@ namespace KK.Agent.Library.Clients
     {
         public Task<ChatCompletionsResponse> GetChatCompletionsAsync(IEnumerable<IChatMessage> messages, CancellationToken cancellationToken = default);
 
-        public Task<ChatCompletionsResponse> GetChatCompletionsAsync(IEnumerable<IChatMessage> messages, List<ChatCompletionsRequest.ToolDefinition> tools, CancellationToken cancellationToken = default);
+        public Task<ChatCompletionsResponse> GetChatCompletionsAsync(IEnumerable<IChatMessage> messages, List<ToolDefinition> tools, CancellationToken cancellationToken = default);
 
         public IAsyncEnumerable<ChatCompletionsResponse> GetChatCompletionsStreamAsync(IEnumerable<IChatMessage> messages, CancellationToken cancellationToken);
 

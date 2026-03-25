@@ -15,16 +15,16 @@ namespace KK.Agent.Library.Clients.OpenApi.V1.Builders
             return this;
         }
 
-        public ChatCompletionsRequestBuilder AddMessages(IEnumerable<ChatCompletionsRequest.ChatMessage> messages)
+        public ChatCompletionsRequestBuilder AddMessages(IEnumerable<ChatMessage> messages)
         {
-            _request.Messages = messages.ToList<ChatCompletionsRequest.ChatMessage>();
+            _request.Messages = messages.ToList<ChatMessage>();
 
             return this;
         }
 
         public ChatCompletionsRequestBuilder AddMessage(string role, string content)
         {
-            var message = new ChatCompletionsRequest.ChatMessage()
+            var message = new ChatMessage()
             {
                 Role = role,
                 Content = content
@@ -86,7 +86,7 @@ namespace KK.Agent.Library.Clients.OpenApi.V1.Builders
 
         public ChatCompletionsRequestBuilder SetResponseFormat(string type)
         {
-            _request.ResponseFormat = new ChatCompletionsRequest.ChatCompletionResponseFormat { Type = type };
+            _request.ResponseFormat = new ChatCompletionResponseFormat { Type = type };
             return this;
         }
 
@@ -96,13 +96,13 @@ namespace KK.Agent.Library.Clients.OpenApi.V1.Builders
             return this;
         }
 
-        public ChatCompletionsRequestBuilder SetFunctions(params ChatCompletionsRequest.FunctionDefinition[]? functions)
+        public ChatCompletionsRequestBuilder SetFunctions(params FunctionDefinition[]? functions)
         {
             _request.Functions = functions?.ToList();
             return this;
         }
 
-        public ChatCompletionsRequestBuilder SetTools(params ChatCompletionsRequest.ToolDefinition[]? tools)
+        public ChatCompletionsRequestBuilder SetTools(params ToolDefinition[]? tools)
         {
             _request.Tools = tools?.ToList();
             return this;

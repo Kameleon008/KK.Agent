@@ -1,42 +1,42 @@
 ﻿using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Clients.OpenApi.V1;
 
-namespace KK.Agent.Library.Entities
+namespace KK.Agent.Library.Agents
 {
-    public class Agent
+    public class CognitiveAgent
     {
         private OpenApiClient _llmService;
-        private Configuration configuration;
-        private List<ChatCompletionsRequest.ChatMessage> _history = [];
+        private CognitiveAgentConfig configuration;
+        private List<ChatMessage> _history = [];
         private Dictionary<string, Func<string, string>> _tools;
 
-        public Agent(Configuration configuration, OpenApiClient provider)
+        public CognitiveAgent(CognitiveAgentConfig configuration, OpenApiClient provider)
         {
             this._llmService = provider;
             this.configuration = configuration;
 
-            this._tools = new Dictionary<string, Func<string, string>>()
+            this._tools = new Dictionary<string, Func<string, string>>() 
             {
                 { "get_weather", args => "Wrocław, 15°C, słonecznie" },
                 { "search_wiki", args => "Agent AI to program wykonujący zadania autonomicznie." },
             };
         }
 
-        private List<ChatCompletionsRequest.ToolDefinition> GetTools()
+        private List<ToolDefinition> GetTools()
         {
-            return _tools.Keys.Select(toolName => new ChatCompletionsRequest.ToolDefinition
+            return _tools.Keys.Select(toolName => new ToolDefinition
             {
                 Type = "function",
-                Function = new ChatCompletionsRequest.FunctionDefinitionV2
+                Function = new ToolDefinitionFunction()
                 {
                     Name = toolName,
                     Description = $"Execute the {toolName} function to get results.",
-                    Parameters = new ChatCompletionsRequest.ParametersSchema
+                    Parameters = new ParametersSchema
                     {
                         Type = "object",
-                        Properties = new Dictionary<string, ChatCompletionsRequest.PropertyDefinition>
+                        Properties = new Dictionary<string, PropertyDefinition>
                         {
-                            { "args", new ChatCompletionsRequest.PropertyDefinition { Type = "string" } }
+                            { "args", new PropertyDefinition { Type = "string" } }
                         },
                         Required = new List<string> { "args" },
                         AdditionalProperties = false
@@ -63,15 +63,15 @@ namespace KK.Agent.Library.Entities
                 var choice = response.Choices.First();
 
                 // 2. Dodaj odpowiedź modelu (asystenta) do historii
-                _history.Add(new ChatCompletionsRequest.ChatMessage()
+                _history.Add(new ChatMessage()
                 {
                     Role = choice.Message.Role,
                     Content = choice.Message.Content,
-                    ToolCalls = choice.Message.ToolCalls.Select(call => new ChatCompletionsRequest.ToolCall()
+                    ToolCalls = choice.Message.ToolCalls.Select(call => new ToolCall()
                     {
                         Id = call.Id,
                         Type = call.Type,
-                        Function = new ChatCompletionsRequest.ChatMessageFunctionCall()
+                        Function = new ChatMessageFunctionCall()
                         {
                             Arguments = call.Function.Arguments,
                             Name = call.Function.Name
@@ -97,7 +97,7 @@ namespace KK.Agent.Library.Entities
                         string result = _tools[toolCall.Function.Name](toolCall.Function.Arguments);
 
                         // 5. Dodaj wynik narzędzia do historii z rolą "tool" i ToolCallId
-                        _history.Add(new ChatCompletionsRequest.ChatMessage()
+                        _history.Add(new ChatMessage()
                         {
                             Role = "tool",
                             Content = result,
