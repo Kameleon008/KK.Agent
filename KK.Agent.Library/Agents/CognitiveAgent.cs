@@ -20,12 +20,6 @@ namespace KK.Agent.Library.Agents
         {
             this._llmService = provider;
             this.configuration = configuration;
-
-            this._tools = new Dictionary<string, Func<string, Task<string>>>() 
-            {
-                { "get_weather", args => Task.FromResult("Wrocław, 15°C, sunny") },
-                { "search_wiki", args => Task.FromResult("Agent AI is a program that performs tasks autonomously.") },
-            };
         }
 
         /// <summary>
@@ -34,7 +28,7 @@ namespace KK.Agent.Library.Agents
         public CognitiveAgent(CognitiveAgentConfig configuration, OpenApiClient provider, object toolsInstance) : this(configuration, provider)
         {
             _toolsInstance = toolsInstance;
-            
+
             // Build tool dictionary from instance
             var methods = toolsInstance.GetType().GetMethods()
                 .Where(m => m.GetCustomAttributes(typeof(AgentToolAttribute), false).Any())
@@ -69,7 +63,7 @@ namespace KK.Agent.Library.Agents
 
                 // Use _toolsInstance as target for non-static method invocation
                 var result = method.Invoke(_toolsInstance, parameterValues);
-                
+
                 if (result is Task task)
                 {
                     await task;
@@ -142,7 +136,7 @@ namespace KK.Agent.Library.Agents
                             Name = call.Function.Name
                         }
                     }).ToList()
-                    
+
                 });
 
                 // 3. Check if model wants to finish (FinishReason == "stop")
@@ -156,12 +150,11 @@ namespace KK.Agent.Library.Agents
                 {
                     foreach (var toolCall in choice.Message.ToolCalls)
                     {
-                        Console.WriteLine($"[Agent]: Wywołuję narzędzie {toolCall.Function.Name}...");
+                        Console.WriteLine($"[Agent]: Calls tool: {toolCall.Function.Name}...");
 
-                        // Wykonaj logikę narzędzia
                         string result = await _tools[toolCall.Function.Name](toolCall.Function.Arguments);
 
-// 5. Add tool result to history with role "tool" and ToolCallId
+                        // 5. Add tool result to history with role "tool" and ToolCallId
                         _history.Add(new ChatMessage()
                         {
                             Role = "tool",
@@ -172,8 +165,7 @@ namespace KK.Agent.Library.Agents
                 }
 
                 // Loop continues - in next iteration we'll send results to LLM
-                    continue;
-                }
+                continue;
             }
 
             return "Iteration limit reached without final answer.";

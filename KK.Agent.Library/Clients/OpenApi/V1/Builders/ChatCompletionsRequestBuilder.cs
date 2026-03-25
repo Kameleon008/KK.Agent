@@ -1,5 +1,4 @@
-﻿using KK.Agent.Library.Clients.OpenApi.V1;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System.Text;
 
 namespace KK.Agent.Library.Clients.OpenApi.V1.Builders
@@ -42,39 +41,9 @@ namespace KK.Agent.Library.Clients.OpenApi.V1.Builders
             return this;
         }
 
-        public ChatCompletionsRequestBuilder SetTopP(double topP)
-        {
-            _request.TopP = topP;
-            return this;
-        }
-
         public ChatCompletionsRequestBuilder SetMaxTokens(int maxTokens)
         {
             _request.MaxTokens = maxTokens;
-            return this;
-        }
-
-        public ChatCompletionsRequestBuilder SetN(int n)
-        {
-            _request.N = n;
-            return this;
-        }
-
-        public ChatCompletionsRequestBuilder SetPresencePenalty(double penalty)
-        {
-            _request.PresencePenalty = penalty;
-            return this;
-        }
-
-        public ChatCompletionsRequestBuilder SetFrequencyPenalty(double penalty)
-        {
-            _request.FrequencyPenalty = penalty;
-            return this;
-        }
-
-        public ChatCompletionsRequestBuilder SetLogitBias(Dictionary<string, int> bias)
-        {
-            _request.LogitBias = bias;
             return this;
         }
 
@@ -96,33 +65,9 @@ namespace KK.Agent.Library.Clients.OpenApi.V1.Builders
             return this;
         }
 
-        public ChatCompletionsRequestBuilder SetFunctions(params FunctionDefinition[]? functions)
-        {
-            _request.Functions = functions?.ToList();
-            return this;
-        }
-
         public ChatCompletionsRequestBuilder SetTools(params ToolDefinition[]? tools)
         {
             _request.Tools = tools?.ToList();
-            return this;
-        }
-
-        public ChatCompletionsRequestBuilder SetFunctionCall(string functionCall)
-        {
-            _request.FunctionCall = functionCall;
-            return this;
-        }
-
-        public ChatCompletionsRequestBuilder SetSeed(int seed)
-        {
-            _request.Seed = seed;
-            return this;
-        }
-
-        public ChatCompletionsRequestBuilder SetUser(string user)
-        {
-            _request.User = user;
             return this;
         }
 
