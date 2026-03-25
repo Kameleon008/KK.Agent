@@ -59,12 +59,7 @@ namespace KK.Agent.Library.Clients.OpenApi
         {
             var body = new ChatCompletionsRequestBuilder()
                 .SetModel(configuration.Model)
-                .AddMessage(
-                    new ChatCompletionsRequest.ChatMessage()
-                    {
-                        Role = "user",
-                        Content = "Hello!"
-                    })
+                .AddMessage("user", "HelloWorld!")
                 .Build()
                 .ToHttpContent();
 
