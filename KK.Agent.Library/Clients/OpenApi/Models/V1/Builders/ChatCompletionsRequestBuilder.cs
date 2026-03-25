@@ -1,4 +1,7 @@
-﻿namespace KK.Agent.Library.Clients.OpenApi.Models.V1.Builders
+﻿using Newtonsoft.Json;
+using System.Text;
+
+namespace KK.Agent.Library.Clients.OpenApi.Models.V1.Builders
 {
 
     public class ChatCompletionsRequestBuilder
@@ -119,6 +122,17 @@
         public ChatCompletionsRequest Build()
         {
             return _request;
+        }
+
+        public string BuildToString()
+        {
+            return JsonConvert.SerializeObject(this._request, Formatting.Indented);
+        }
+
+        public StringContent BuildToHttpContent()
+        {
+            var jsonStringContent = JsonConvert.SerializeObject(this._request, Formatting.Indented);
+            return new StringContent(jsonStringContent, Encoding.UTF8, "application/json");
         }
     }
 }

@@ -1,4 +1,3 @@
-using KK.Agent.Library.Clients;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Configuration;
 using KK.Agent.Library.Configuration.Models;
@@ -10,21 +9,19 @@ public static class Program
     public static async Task Main(string[] args)
     {
         ConfigService.Load();
-        
+
         var config = ConfigService.Get<ConfigRoot>();
 
         var openApiClient = new OpenApiClient(config.Provider);
 
-        var result = await openApiClient.GetModelsAsync();
+        //var chat = await openApiClient.GetChatCompletionsAsync();
 
-        foreach (var models in result.Data)
+        //Console.WriteLine(chat.Choices.First().Message.Content);
+
+        await foreach (var word in openApiClient.GetChatCompletionsStreamAsync())
         {
-            Console.WriteLine(models.Id);
+            Console.Write(word); // You'll see the AI "typing" in real-time
         }
-
-        var chat = await openApiClient.GetChatCompletionsAsync();
-
-        Console.WriteLine(chat);
 
         await Task.Delay(100);
     }
