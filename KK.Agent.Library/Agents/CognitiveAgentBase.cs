@@ -1,41 +1,39 @@
 ﻿using System.Reflection;
+using KK.Agent.Library.Attributes;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Clients.OpenApi.V1;
-using KK.Agent.Library.Entities;
+using KK.Agent.Library.Tools;
 
 namespace KK.Agent.Library.Agents
 {
-    public class CognitiveAgent
+    public abstract class CognitiveAgentBase
     {
         private OpenApiClient _llmService;
         private CognitiveAgentConfig configuration;
         private List<ChatMessage> _history = [];
         private Dictionary<string, Func<string, Task<string>>> _tools;
-        private object? _toolsInstance;
+        private object _toolsInstances;
 
-        /// <summary>
-        /// Creates a new CognitiveAgent with dictionary-based tools (legacy)
-        /// </summary>
-        public CognitiveAgent(CognitiveAgentConfig configuration, OpenApiClient provider)
+        private string systemPropmpt =
+            """
+            You are a pirate and talk like a pirate!
+            """;
+
+        protected CognitiveAgentBase(CognitiveAgentConfig configuration, OpenApiClient provider)
         {
             this._llmService = provider;
             this.configuration = configuration;
         }
 
-        /// <summary>
-        /// Creates a new CognitiveAgent with reflection-based tools from an instance
-        /// </summary>
-        public CognitiveAgent(CognitiveAgentConfig configuration, OpenApiClient provider, object toolsInstance) : this(configuration, provider)
+        protected CognitiveAgentBase(CognitiveAgentConfig configuration, OpenApiClient provider, object toolsInstance) : this(configuration, provider)
         {
-            _toolsInstance = toolsInstance;
+            _toolsInstances = toolsInstance;
 
-            // Build tool dictionary from instance
-            var methods = toolsInstance.GetType().GetMethods()
+            var methods = toolsInstance
+                .GetType()
+                .GetMethods()
                 .Where(m => m.GetCustomAttributes(typeof(AgentToolAttribute), false).Any())
-                .ToDictionary(
-                    m => m.Name,
-                    m => CreateDelegateFromMethodInfo(m)
-                );
+                .ToDictionary(m => m.Name, CreateDelegateFromMethodInfo);
 
             _tools = methods;
         }
@@ -62,7 +60,7 @@ namespace KK.Agent.Library.Agents
                 }
 
                 // Use _toolsInstance as target for non-static method invocation
-                var result = method.Invoke(_toolsInstance, parameterValues);
+                var result = method.Invoke(_toolsInstances, parameterValues);
 
                 if (result is Task task)
                 {
@@ -76,10 +74,10 @@ namespace KK.Agent.Library.Agents
 
         private List<ToolDefinition> GetTools()
         {
-            if (_toolsInstance != null)
+            if (_toolsInstances != null)
             {
                 // Generate from reflection attributes
-                return ToolDefinitionGenerator.GenerateFromObject(_toolsInstance);
+                return ToolDefinitionGenerator.GenerateFromObject(_toolsInstances);
             }
 
             // For legacy dictionary-based tools
@@ -107,7 +105,15 @@ namespace KK.Agent.Library.Agents
 
         public async Task<string> RunAsync(string prompt)
         {
-            this._history.Add(new()
+            this._history.Clear();
+
+            this._history.Add(new ChatMessage
+            {
+                Role = "system",
+                Content = this.systemPropmpt
+            });
+
+            this._history.Add(new ChatMessage
             {
                 Role = "user",
                 Content = prompt

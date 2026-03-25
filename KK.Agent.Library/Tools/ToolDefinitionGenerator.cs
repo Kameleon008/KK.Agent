@@ -1,32 +1,9 @@
 using System.Reflection;
+using KK.Agent.Library.Attributes;
 using KK.Agent.Library.Clients.OpenApi.V1;
 
-namespace KK.Agent.Library.Entities
+namespace KK.Agent.Library.Tools
 {
-    [AttributeUsage(AttributeTargets.Method)]
-    public class AgentToolAttribute : Attribute
-    {
-        public string? Description { get; set; }
-        
-        public AgentToolAttribute() { }
-        
-        public AgentToolAttribute(string description)
-        {
-            Description = description;
-        }
-    }
-
-    [AttributeUsage(AttributeTargets.Parameter)]
-    public class ParameterDescriptionAttribute : Attribute
-    {
-        public string Description { get; }
-        
-        public ParameterDescriptionAttribute(string description)
-        {
-            Description = description;
-        }
-    }
-
     public static class ToolDefinitionGenerator
     {
         /// <summary>
