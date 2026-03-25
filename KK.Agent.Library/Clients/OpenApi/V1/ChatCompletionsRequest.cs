@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Text;
 
-namespace KK.Agent.Library.Clients.OpenApi.Models.V1;
+namespace KK.Agent.Library.Clients.OpenApi.V1;
 
 public class ChatCompletionsRequest
 {

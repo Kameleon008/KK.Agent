@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace KK.Agent.Library.Clients.OpenApi.Models.V1
+namespace KK.Agent.Library.Clients.OpenApi.V1
 {
     public class ModelsResponse
     {

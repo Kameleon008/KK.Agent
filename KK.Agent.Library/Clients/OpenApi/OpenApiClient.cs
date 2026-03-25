@@ -1,5 +1,5 @@
-﻿using KK.Agent.Library.Clients.OpenApi.Models.V1;
-using KK.Agent.Library.Clients.OpenApi.Models.V1.Builders;
+﻿using KK.Agent.Library.Clients.OpenApi.V1.Builders;
+using KK.Agent.Library.Clients.OpenApi.V1;
 using KK.Agent.Library.Configuration.Models;
 using Newtonsoft.Json;
 using System.Runtime.CompilerServices;
@@ -56,7 +56,7 @@ namespace KK.Agent.Library.Clients.OpenApi
             return result;
         }
 
-        public async Task<ChatCompletionsResponse> GetChatCompletionsAsync()
+        public async Task<ChatCompletionsResponse> GetChatCompletionsAsync(CancellationToken cancelationToken = default)
         {
             var body = new ChatCompletionsRequestBuilder()
                 .SetModel(configuration.Model)
@@ -65,15 +65,15 @@ namespace KK.Agent.Library.Clients.OpenApi
                 .Build()
                 .ToHttpContent();
 
-            var result = await this._httpClient.PostAsync("/v1/chat/completions", body);
+            var result = await this._httpClient.PostAsync("/v1/chat/completions", body, cancelationToken);
 
-            var x = await result.Content.ReadAsStringAsync();
+            var x = await result.Content.ReadAsStringAsync(cancelationToken);
 
             return JsonConvert.DeserializeObject<ChatCompletionsResponse>(x);
         }
 
 
-        public async IAsyncEnumerable<string> GetChatCompletionsStreamAsync([EnumeratorCancellation] CancellationToken ct = default)
+        public async IAsyncEnumerable<ChatCompletionsResponse> GetChatCompletionsStreamAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var body = new ChatCompletionsRequestBuilder()
                 .SetModel(configuration.Model)
@@ -85,29 +85,30 @@ namespace KK.Agent.Library.Clients.OpenApi
             using var request = new HttpRequestMessage(HttpMethod.Post, "/v1/chat/completions") { Content = body };
 
             // 1. Get headers only
-            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             // 2. Open the stream
-            using var stream = await response.Content.ReadAsStreamAsync(ct);
+            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             using var reader = new StreamReader(stream);
 
             // 3. Read line by line and yield back to the caller
-            while (!reader.EndOfStream)
+            while (await reader.ReadLineAsync(cancellationToken) is { } line)
             {
-                var line = await reader.ReadLineAsync(ct);
                 if (string.IsNullOrWhiteSpace(line) || line == "data: [DONE]") continue;
 
-                if (line.StartsWith("data: "))
+                if (!line.StartsWith("data: "))
                 {
-                    var json = line.Substring(6);
-                    var chunk = JsonConvert.DeserializeObject<ChatCompletionsResponse>(json);
-                    var content = chunk?.Choices.First().Delta.Content;
+                    continue;
+                }
 
-                    if (!string.IsNullOrEmpty(content))
-                    {
-                        yield return content; // This sends the word to the caller immediately
-                    }
+                var json = line.Substring(6);
+
+                var result = JsonConvert.DeserializeObject<ChatCompletionsResponse>(json);
+
+                if (result != null)
+                {
+                    yield return result;
                 }
             }
         }
