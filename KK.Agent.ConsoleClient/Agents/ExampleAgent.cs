@@ -5,11 +5,11 @@ namespace KK.Agent.ConsoleClient.Agents
 {
     internal class ExampleAgent : CognitiveAgentBase
     {
-        public ExampleAgent(CognitiveAgentConfig configuration, OpenApiClient provider) : base(configuration, provider)
+        public ExampleAgent(OpenApiClient provider) : base(provider)
         {
         }
 
-        public ExampleAgent(CognitiveAgentConfig configuration, OpenApiClient provider, object toolsInstance) : base(configuration, provider, toolsInstance)
+        public ExampleAgent(OpenApiClient provider, object toolsInstance) : base(provider, toolsInstance)
         {
         }
     }

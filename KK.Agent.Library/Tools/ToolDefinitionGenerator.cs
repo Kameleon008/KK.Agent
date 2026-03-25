@@ -9,13 +9,18 @@ namespace KK.Agent.Library.Tools
         /// <summary>
         /// Generates a list of ToolDefinitions from the given object instance
         /// </summary>
-        public static List<ToolDefinition> GenerateFromObject(object instance)
+        public static List<ToolDefinition> GenerateFromObject(object? instance)
         {
+            if (instance == null)
+            {
+                return [];
+            }
+
             var type = instance.GetType();
             var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
 
             return methods
-                .Where(m => m.GetCustomAttributes(typeof(AgentToolAttribute), false).Any())
+                .Where(method => method.GetCustomAttributes(typeof(AgentToolAttribute), false).Any())
                 .Select(method => GenerateFromMethod(method, instance))
                 .ToList();
         }

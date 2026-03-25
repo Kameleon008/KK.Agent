@@ -1,41 +1,30 @@
-﻿using System.Reflection;
-using KK.Agent.Library.Attributes;
+﻿using KK.Agent.Library.Attributes;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Clients.OpenApi.V1;
 using KK.Agent.Library.Tools;
+using System.Reflection;
 
 namespace KK.Agent.Library.Agents
 {
-    public abstract class CognitiveAgentBase
+    public abstract class CognitiveAgentBase(OpenApiClient provider)
     {
-        private OpenApiClient _llmService;
-        private CognitiveAgentConfig configuration;
-        private List<ChatMessage> _history = [];
-        private Dictionary<string, Func<string, Task<string>>> _tools;
-        private object _toolsInstances;
+        private readonly List<ChatMessage> _history = [];
+        private readonly Dictionary<string, Func<string, Task<string>>> _tools = new ();
+        private readonly object? _toolsInstances;
 
-        private string systemPropmpt =
-            """
-            You are a pirate and talk like a pirate!
-            """;
+        private const string SystemPrompt = "You are helpful AI assistant";
 
-        protected CognitiveAgentBase(CognitiveAgentConfig configuration, OpenApiClient provider)
+        protected CognitiveAgentBase(OpenApiClient provider, object toolsInstance) : this(provider)
         {
-            this._llmService = provider;
-            this.configuration = configuration;
-        }
-
-        protected CognitiveAgentBase(CognitiveAgentConfig configuration, OpenApiClient provider, object toolsInstance) : this(configuration, provider)
-        {
-            _toolsInstances = toolsInstance;
+            this._toolsInstances = toolsInstance;
 
             var methods = toolsInstance
                 .GetType()
                 .GetMethods()
-                .Where(m => m.GetCustomAttributes(typeof(AgentToolAttribute), false).Any())
-                .ToDictionary(m => m.Name, CreateDelegateFromMethodInfo);
+                .Where(method => method.GetCustomAttributes(typeof(AgentToolAttribute), false).Any())
+                .ToDictionary(method => method.Name, CreateDelegateFromMethodInfo);
 
-            _tools = methods;
+            this._tools = methods;
         }
 
         private Func<string, Task<string>> CreateDelegateFromMethodInfo(MethodInfo method)
@@ -46,7 +35,7 @@ namespace KK.Agent.Library.Agents
                 var argDict = System.Text.Json.JsonDocument.Parse(args).RootElement.EnumerateObject().ToDictionary(p => p.Name, p => p.Value.ToString());
 
                 var parameterValues = new object?[parameters.Length];
-                for (int i = 0; i < parameters.Length; i++)
+                for (var i = 0; i < parameters.Length; i++)
                 {
                     var param = parameters[i];
                     if (argDict.TryGetValue(param.Name!, out var argValue) && !string.IsNullOrEmpty(argValue))
@@ -59,48 +48,18 @@ namespace KK.Agent.Library.Agents
                     }
                 }
 
-                // Use _toolsInstance as target for non-static method invocation
                 var result = method.Invoke(_toolsInstances, parameterValues);
 
-                if (result is Task task)
+                if (result is not Task task)
                 {
-                    await task;
-                    return (string?)task.GetType().GetProperty("Result")?.GetValue(task) ?? string.Empty;
+                    return (string?)result ?? string.Empty;
                 }
 
-                return (string?)result ?? string.Empty;
+                await task;
+
+                return (string?)task.GetType().GetProperty("Result")?.GetValue(task) ?? string.Empty;
+
             };
-        }
-
-        private List<ToolDefinition> GetTools()
-        {
-            if (_toolsInstances != null)
-            {
-                // Generate from reflection attributes
-                return ToolDefinitionGenerator.GenerateFromObject(_toolsInstances);
-            }
-
-            // For legacy dictionary-based tools
-            return _tools.Keys.Select(toolName => new ToolDefinition
-            {
-                Type = "function",
-                Function = new ToolDefinitionFunction()
-                {
-                    Name = toolName,
-                    Description = $"Execute the {toolName} function to get results.",
-                    Parameters = new ParametersSchema
-                    {
-                        Type = "object",
-                        Properties = new Dictionary<string, PropertyDefinition>
-                        {
-                            { "args", new PropertyDefinition { Type = "string" } }
-                        },
-                        Required = new List<string> { "args" },
-                        AdditionalProperties = false
-                    },
-                    Strict = true
-                }
-            }).ToList();
         }
 
         public async Task<string> RunAsync(string prompt)
@@ -110,7 +69,7 @@ namespace KK.Agent.Library.Agents
             this._history.Add(new ChatMessage
             {
                 Role = "system",
-                Content = this.systemPropmpt
+                Content = SystemPrompt
             });
 
             this._history.Add(new ChatMessage
@@ -119,26 +78,26 @@ namespace KK.Agent.Library.Agents
                 Content = prompt
             });
 
-            for (int i = 0; i < 5; i++)
+            for (var i = 0; i < 5; i++)
             {
                 // 1. Send query to the model with tools
-                var tools = GetTools();
-                var response = await _llmService.GetChatCompletionsAsync(_history, tools);
+                var tools = ToolDefinitionGenerator.GenerateFromObject(this._toolsInstances);
+                var response = await provider.GetChatCompletionsAsync(_history, tools);
 
                 var choice = response.Choices.First();
 
                 // 2. Add model's (assistant) response to history
-                _history.Add(new ChatMessage()
+                _history.Add(new ChatMessage
                 {
                     Role = choice.Message.Role,
                     Content = choice.Message.Content,
-                    ToolCalls = choice.Message.ToolCalls.Select(call => new ToolCall()
+                    ToolCalls = choice.Message.ToolCalls!.Select(call => new ToolCall
                     {
-                        Id = call.Id,
-                        Type = call.Type,
-                        Function = new ChatMessageFunctionCall()
+                        Id = call.Id!,
+                        Type = call.Type!,
+                        Function = new ChatMessageFunctionCall
                         {
-                            Arguments = call.Function.Arguments,
+                            Arguments = call.Function!.Arguments,
                             Name = call.Function.Name
                         }
                     }).ToList()
@@ -154,11 +113,11 @@ namespace KK.Agent.Library.Agents
                 // 4. Handle Tool Calling (FinishReason == "tool_calls")
                 if (choice.FinishReason == "tool_calls")
                 {
-                    foreach (var toolCall in choice.Message.ToolCalls)
+                    foreach (var toolCall in choice.Message.ToolCalls!)
                     {
-                        Console.WriteLine($"[Agent]: Calls tool: {toolCall.Function.Name}...");
+                        Console.WriteLine($"[Agent]: Calls tool: {toolCall.Function!.Name}...");
 
-                        string result = await _tools[toolCall.Function.Name](toolCall.Function.Arguments);
+                        var result = await _tools[toolCall.Function!.Name](toolCall.Function.Arguments);
 
                         // 5. Add tool result to history with role "tool" and ToolCallId
                         _history.Add(new ChatMessage()
@@ -169,9 +128,6 @@ namespace KK.Agent.Library.Agents
                         });
                     }
                 }
-
-                // Loop continues - in next iteration we'll send results to LLM
-                continue;
             }
 
             return "Iteration limit reached without final answer.";
