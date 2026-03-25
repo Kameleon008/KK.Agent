@@ -24,14 +24,14 @@ namespace KK.Agent.Library.Entities.Examples
         [AgentTool("Get weather information for a specific location.")]
         public string get_weather(string city)
         {
-            return $"{city}, 15°C, słonecznie";
+            return $"{city}, 15°C, sunny";
         }
 
         [AgentTool("Search wiki for information about any topic.")]
         public async Task<string> search_wiki([ParameterDescription("topic to search")] string query)
         {
             await Task.Delay(200);
-            return $"Wiki results for: {query} - Agent AI to program wykonujący zadania autonomicznie.";
+            return $"Wiki results for: {query} - Agent AI is a program that performs tasks autonomously.";
         }
 
         [AgentTool("Calculate the sum of two numbers.")]

@@ -30,7 +30,7 @@ namespace KK.Agent.Library.Entities
     public static class ToolDefinitionGenerator
     {
         /// <summary>
-        /// Generuje listę ToolDefinition z podanej instancji obiektu
+        /// Generates a list of ToolDefinitions from the given object instance
         /// </summary>
         public static List<ToolDefinition> GenerateFromObject(object instance)
         {
@@ -44,7 +44,7 @@ namespace KK.Agent.Library.Entities
         }
 
         /// <summary>
-        /// Generuje ToolDefinition z pojedynczej metody
+        /// Generates a ToolDefinition from a single method
         /// </summary>
         public static ToolDefinition GenerateFromMethod(MethodInfo method, object? instance = null)
         {
@@ -69,14 +69,14 @@ namespace KK.Agent.Library.Entities
             {
                 var paramDescription = parameter.GetCustomAttribute<ParameterDescriptionAttribute>();
                 
-                // Dodaj do properties
+                // Add to properties
                 functionDef.Parameters.Properties[parameter.Name!] = new PropertyDefinition
                 {
                     Type = GetJsonType(parameter.ParameterType),
                     Description = paramDescription?.Description ?? parameter.Name
                 };
 
-                // Jeśli parametr jest wymagany (nie ma default value lub jest to string/object)
+                // If parameter is required (no default value or it's string/object)
                 var hasDefaultValue = parameter.HasDefaultValue;
                 if (!hasDefaultValue || !IsNullableOrPrimitiveWithDefault(parameter))
                 {
@@ -96,13 +96,13 @@ namespace KK.Agent.Library.Entities
             if (type == typeof(string)) return "string";
             if (type == typeof(int) || type == typeof(long) || type == typeof(double) || type == typeof(float) || type == typeof(decimal)) return "number";
             if (type == typeof(bool)) return "boolean";
-            if (type == typeof(DateTime)) return "string"; // Data jako string w formacie ISO 8601
+            if (type == typeof(DateTime)) return "string"; // Date as string in ISO 8601 format
             
-            // Obsługa typów enumerables jako array
+            // Handle enumerable types as array
             if (type.IsArray || typeof(System.Collections.IEnumerable).IsAssignableFrom(type))
                 return "array";
 
-            // Domyślnie string dla pozostałych typów
+            // Default to string for other types
             return "string";
         }
 

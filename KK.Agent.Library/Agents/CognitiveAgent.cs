@@ -23,8 +23,8 @@ namespace KK.Agent.Library.Agents
 
             this._tools = new Dictionary<string, Func<string, Task<string>>>() 
             {
-                { "get_weather", args => Task.FromResult("Wrocław, 15°C, słonecznie") },
-                { "search_wiki", args => Task.FromResult("Agent AI to program wykonujący zadania autonomicznie.") },
+                { "get_weather", args => Task.FromResult("Wrocław, 15°C, sunny") },
+                { "search_wiki", args => Task.FromResult("Agent AI is a program that performs tasks autonomously.") },
             };
         }
 
@@ -35,7 +35,7 @@ namespace KK.Agent.Library.Agents
         {
             _toolsInstance = toolsInstance;
             
-            // Zbuduj słownik narzędzi z instancji
+            // Build tool dictionary from instance
             var methods = toolsInstance.GetType().GetMethods()
                 .Where(m => m.GetCustomAttributes(typeof(AgentToolAttribute), false).Any())
                 .ToDictionary(
@@ -67,7 +67,7 @@ namespace KK.Agent.Library.Agents
                     }
                 }
 
-                // Użyj _toolsInstance jako target dla metody niestacjonarnej
+                // Use _toolsInstance as target for non-static method invocation
                 var result = method.Invoke(_toolsInstance, parameterValues);
                 
                 if (result is Task task)
@@ -84,11 +84,11 @@ namespace KK.Agent.Library.Agents
         {
             if (_toolsInstance != null)
             {
-                // Generuj z atrybutów reflection
+                // Generate from reflection attributes
                 return ToolDefinitionGenerator.GenerateFromObject(_toolsInstance);
             }
 
-            // Dla starych narzędzi słownikowych
+            // For legacy dictionary-based tools
             return _tools.Keys.Select(toolName => new ToolDefinition
             {
                 Type = "function",
@@ -121,13 +121,13 @@ namespace KK.Agent.Library.Agents
 
             for (int i = 0; i < 5; i++)
             {
-                // 1. Wyślij zapytanie do modelu z narzędziami
+                // 1. Send query to the model with tools
                 var tools = GetTools();
                 var response = await _llmService.GetChatCompletionsAsync(_history, tools);
 
                 var choice = response.Choices.First();
 
-                // 2. Dodaj odpowiedź modelu (asystenta) do historii
+                // 2. Add model's (assistant) response to history
                 _history.Add(new ChatMessage()
                 {
                     Role = choice.Message.Role,
@@ -145,13 +145,13 @@ namespace KK.Agent.Library.Agents
                     
                 });
 
-                // 3. Sprawdź, czy model chce zakończyć (FinishReason == "stop")
+                // 3. Check if model wants to finish (FinishReason == "stop")
                 if (choice.FinishReason == "stop")
                 {
                     return choice.Message.Content;
                 }
 
-                // 4. Obsługa Tool Calling (FinishReason == "tool_calls")
+                // 4. Handle Tool Calling (FinishReason == "tool_calls")
                 if (choice.FinishReason == "tool_calls")
                 {
                     foreach (var toolCall in choice.Message.ToolCalls)
@@ -161,7 +161,7 @@ namespace KK.Agent.Library.Agents
                         // Wykonaj logikę narzędzia
                         string result = await _tools[toolCall.Function.Name](toolCall.Function.Arguments);
 
-                        // 5. Dodaj wynik narzędzia do historii z rolą "tool" i ToolCallId
+// 5. Add tool result to history with role "tool" and ToolCallId
                         _history.Add(new ChatMessage()
                         {
                             Role = "tool",
@@ -169,13 +169,14 @@ namespace KK.Agent.Library.Agents
                             ToolCallId = toolCall.Id
                         });
                     }
+                }
 
-                    // Pętla kontynuuje działanie – w następnej iteracji wyślemy wyniki do LLM
+                // Loop continues - in next iteration we'll send results to LLM
                     continue;
                 }
             }
 
-            return "Osiągnięto limit iteracji bez finalnej odpowiedzi.";
+            return "Iteration limit reached without final answer.";
         }
     }
 }

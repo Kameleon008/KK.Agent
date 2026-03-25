@@ -8,69 +8,69 @@ namespace KK.Agent.Library.Examples
     public class ToolUsageExample
     {
         /// <summary>
-        /// Przykład użycia CognitiveAgent z narzędziami opartymi na atrybutach reflection
+        /// Example usage of CognitiveAgent with reflection-based attribute tools
         /// </summary>
         public static async Task ExampleWithReflectionTools()
         {
-            // 1. Konfiguracja
+            // 1. Configuration
             var config = new ConfigProvider
             {
                 Model = "gpt-4o-mini",
                 Endpoint = "https://api.openai.com/v1"
             };
 
-            // 2. Utwórz klienta API
+            // 2. Create API client
             var apiClient = new OpenApiClient(config);
 
-            // 3. Utwórz instancję narzędzi - klasa z atrybutami [AgentTool] i [ParameterDescription]
+            // 3. Create tools instance - class with [AgentTool] and [ParameterDescription] attributes
             var toolsInstance = new LoreDatabaseTools();
 
-            // 4. Utwórz agenta z narzędziami reflection-based
+            // 4. Create agent with reflection-based tools
             var cognitiveConfig = new CognitiveAgentConfig();
             var agent = new CognitiveAgent(cognitiveConfig, apiClient, toolsInstance);
 
-            // 5. Wyślij prompt do agenta
-            string response = await agent.RunAsync("Gdzie pochodzi Luke Skywalker?");
+            // 5. Send prompt to the agent
+            string response = await agent.RunAsync("Where does Luke Skywalker come from?");
 
-            Console.WriteLine($"Odpowiedź: {response}");
+            Console.WriteLine($"Answer: {response}");
         }
 
         /// <summary>
-        /// Przykład użycia CognitiveAgent z tradycyjnymi narzędziami słownikowymi (legacy)
+        /// Example usage of CognitiveAgent with traditional dictionary-based tools (legacy)
         /// </summary>
         public static async Task ExampleWithDictionaryTools()
         {
-            // 1. Konfiguracja
+            // 1. Configuration
             var config = new ConfigProvider
             {
                 Model = "gpt-4o-mini",
                 Endpoint = "https://api.openai.com/v1"
             };
 
-            // 2. Utwórz klienta API
+            // 2. Create API client
             var apiClient = new OpenApiClient(config);
 
-            // 3. Utwórz agenta z tradycyjnymi narzędziami słownikowymi
+            // 3. Create agent with traditional dictionary-based tools
             var cognitiveConfig = new CognitiveAgentConfig();
             var agent = new CognitiveAgent(cognitiveConfig, apiClient);
 
-            // 4. Wyślij prompt do agenta
-            string response = await agent.RunAsync("Jaka jest pogoda we Wrocławiu?");
+            // 4. Send prompt to the agent
+            string response = await agent.RunAsync("What is the weather in Wrocław?");
 
-            Console.WriteLine($"Odpowiedź: {response}");
+            Console.WriteLine($"Answer: {response}");
         }
 
         /// <summary>
-        /// Przykład pokazujący jak wygląda wygenerowany payload dla narzędzia search_lore
+        /// Example showing what the generated payload looks like for search_lore tool
         /// </summary>
         public static void ShowGeneratedToolDefinition()
         {
             var toolsInstance = new LoreDatabaseTools();
             
-            // Wygeneruj definicje narzędzi
+            // Generate tool definitions
             var toolDefinitions = KK.Agent.Library.Entities.ToolDefinitionGenerator.GenerateFromObject(toolsInstance);
 
-            // Serializuj do JSON dla zobaczenia
+            // Serialize to JSON for viewing
             foreach (var tool in toolDefinitions)
             {
                 Console.WriteLine($"Tool: {tool.Function.Name}");
