@@ -62,6 +62,33 @@ public class ChatCompletionsRequest
 
         [JsonProperty("content", NullValueHandling = NullValueHandling.Ignore)]
         public string Content { get; set; } = null!;
+
+        [JsonProperty("tool_calls", NullValueHandling = NullValueHandling.Ignore)]
+        public List<ToolCall>? ToolCalls { get; set; }
+
+        [JsonProperty("tool_call_id", NullValueHandling = NullValueHandling.Ignore)]
+        public string? ToolCallId { get; set; }
+    }
+
+    public class ToolCall
+    {
+        [JsonProperty("type", NullValueHandling = NullValueHandling.Ignore)]
+        public string Type { get; set; } = "function";
+
+        [JsonProperty("id", NullValueHandling = NullValueHandling.Ignore)]
+        public string Id { get; set; } = null!;
+
+        [JsonProperty("function", NullValueHandling = NullValueHandling.Ignore)]
+        public ChatMessageFunctionCall Function { get; set; } = null!;
+    }
+
+    public class ChatMessageFunctionCall
+    {
+        [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
+        public string Name { get; set; } = null!;
+
+        [JsonProperty("arguments", NullValueHandling = NullValueHandling.Ignore)]
+        public string Arguments { get; set; } = null!;
     }
 
     public class ChatCompletionResponseFormat
@@ -82,6 +109,60 @@ public class ChatCompletionsRequest
         [JsonProperty("parameters", NullValueHandling = NullValueHandling.Ignore)]
         public object Parameters { get; set; } = null!;
     }
+
+    // Nowy format dla tools (function calling v2)
+    public class ToolDefinition
+    {
+        [JsonProperty("type", NullValueHandling = NullValueHandling.Ignore)]
+        public string Type { get; set; } = "function";
+
+        [JsonProperty("function", NullValueHandling = NullValueHandling.Ignore)]
+        public FunctionDefinitionV2? Function { get; set; }
+    }
+
+    public class FunctionDefinitionV2
+    {
+        [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
+        public string Name { get; set; } = null!;
+
+        [JsonProperty("description", NullValueHandling = NullValueHandling.Ignore)]
+        public string Description { get; set; } = null!;
+
+        [JsonProperty("parameters", NullValueHandling = NullValueHandling.Ignore)]
+        public ParametersSchema? Parameters { get; set; }
+
+        [JsonProperty("strict", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? Strict { get; set; }
+    }
+
+    public class ParametersSchema
+    {
+        [JsonProperty("type", NullValueHandling = NullValueHandling.Ignore)]
+        public string Type { get; set; } = "object";
+
+        [JsonProperty("properties", NullValueHandling = NullValueHandling.Ignore)]
+        public Dictionary<string, PropertyDefinition>? Properties { get; set; }
+
+        [JsonProperty("required", NullValueHandling = NullValueHandling.Ignore)]
+        public List<string>? Required { get; set; }
+
+
+        [JsonProperty("additionalProperties", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? AdditionalProperties { get; set; } = false;
+    }
+
+    public class PropertyDefinition
+    {
+        [JsonProperty("type", NullValueHandling = NullValueHandling.Ignore)]
+        public string Type { get; set; } = "string";
+
+        [JsonProperty("description", NullValueHandling = NullValueHandling.Ignore)]
+        public string? Description { get; set; }
+    }
+
+    [JsonProperty("tools", NullValueHandling = NullValueHandling.Ignore)]
+    public List<ToolDefinition>? Tools { get; set; }
+
 
     public override string ToString()
     {

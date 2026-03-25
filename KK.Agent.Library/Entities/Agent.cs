@@ -22,6 +22,30 @@ namespace KK.Agent.Library.Entities
             };
         }
 
+        private List<ChatCompletionsRequest.ToolDefinition> GetTools()
+        {
+            return _tools.Keys.Select(toolName => new ChatCompletionsRequest.ToolDefinition
+            {
+                Type = "function",
+                Function = new ChatCompletionsRequest.FunctionDefinitionV2
+                {
+                    Name = toolName,
+                    Description = $"Execute the {toolName} function to get results.",
+                    Parameters = new ChatCompletionsRequest.ParametersSchema
+                    {
+                        Type = "object",
+                        Properties = new Dictionary<string, ChatCompletionsRequest.PropertyDefinition>
+                        {
+                            { "args", new ChatCompletionsRequest.PropertyDefinition { Type = "string" } }
+                        },
+                        Required = new List<string> { "args" },
+                        AdditionalProperties = false
+                    },
+                    Strict = true
+                }
+            }).ToList();
+        }
+
         public async Task<string> RunAsync(string prompt)
         {
             this._history.Add(new()
@@ -32,8 +56,9 @@ namespace KK.Agent.Library.Entities
 
             for (int i = 0; i < 5; i++)
             {
-                // 1. Wyślij zapytanie do modelu
-                var response = await _llmService.GetChatCompletionsAsync(_history);
+                // 1. Wyślij zapytanie do modelu z narzędziami
+                var tools = GetTools();
+                var response = await _llmService.GetChatCompletionsAsync(_history, tools);
 
                 var choice = response.Choices.First();
 
@@ -42,6 +67,16 @@ namespace KK.Agent.Library.Entities
                 {
                     Role = choice.Message.Role,
                     Content = choice.Message.Content,
+                    ToolCalls = choice.Message.ToolCalls.Select(call => new ChatCompletionsRequest.ToolCall()
+                    {
+                        Id = call.Id,
+                        Type = call.Type,
+                        Function = new ChatCompletionsRequest.ChatMessageFunctionCall()
+                        {
+                            Arguments = call.Function.Arguments,
+                            Name = call.Function.Name
+                        }
+                    }).ToList()
                     
                 });
 
@@ -66,6 +101,7 @@ namespace KK.Agent.Library.Entities
                         {
                             Role = "tool",
                             Content = result,
+                            ToolCallId = toolCall.Id
                         });
                     }
 

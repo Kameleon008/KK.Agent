@@ -102,6 +102,12 @@ namespace KK.Agent.Library.Clients.OpenApi.V1.Builders
             return this;
         }
 
+        public ChatCompletionsRequestBuilder SetTools(params ChatCompletionsRequest.ToolDefinition[]? tools)
+        {
+            _request.Tools = tools?.ToList();
+            return this;
+        }
+
         public ChatCompletionsRequestBuilder SetFunctionCall(string functionCall)
         {
             _request.FunctionCall = functionCall;

@@ -76,6 +76,27 @@ namespace KK.Agent.Library.Clients.OpenApi
             return JsonConvert.DeserializeObject<ChatCompletionsResponse>(x);
         }
 
+        public async Task<ChatCompletionsResponse> GetChatCompletionsAsync(IEnumerable<IChatMessage> messages, List<ChatCompletionsRequest.ToolDefinition> tools, CancellationToken cancelationToken = default)
+        {
+            var body = new ChatCompletionsRequestBuilder()
+                .SetModel(configuration.Model)
+                .AddMessages(messages.Select(message => new ChatCompletionsRequest.ChatMessage()
+                {
+                    Role = message.Role,
+                    Content = message.Content
+                }))
+                .SetTools(tools.ToArray())
+                .SetStream(false)
+                .Build()
+                .ToHttpContent();
+
+            var result = await this._httpClient.PostAsync("/v1/chat/completions", body, cancelationToken);
+
+            var x = await result.Content.ReadAsStringAsync(cancelationToken);
+
+            return JsonConvert.DeserializeObject<ChatCompletionsResponse>(x);
+        }
+
 
         public async IAsyncEnumerable<ChatCompletionsResponse> GetChatCompletionsStreamAsync(IEnumerable<IChatMessage> messages, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {

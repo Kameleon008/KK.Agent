@@ -4,7 +4,9 @@ namespace KK.Agent.Library.Clients
 {
     public interface IChatCompletionsApiClient
     {
-        public Task<ChatCompletionsResponse> GetChatCompletionsAsync(IEnumerable<IChatMessage> messages, CancellationToken cancellationToken);
+        public Task<ChatCompletionsResponse> GetChatCompletionsAsync(IEnumerable<IChatMessage> messages, CancellationToken cancellationToken = default);
+
+        public Task<ChatCompletionsResponse> GetChatCompletionsAsync(IEnumerable<IChatMessage> messages, List<ChatCompletionsRequest.ToolDefinition> tools, CancellationToken cancellationToken = default);
 
         public IAsyncEnumerable<ChatCompletionsResponse> GetChatCompletionsStreamAsync(IEnumerable<IChatMessage> messages, CancellationToken cancellationToken);
 
@@ -15,5 +17,7 @@ namespace KK.Agent.Library.Clients
         public string Role { get; set; }
 
         public string Content { get; set; }
+
+        public string? ToolCallId { get; set; }
     }
 }
