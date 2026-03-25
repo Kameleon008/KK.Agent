@@ -61,7 +61,7 @@ namespace KK.Agent.Library.Clients.OpenApi
                 .AddMessage(
                     new ChatCompletionsRequest.ChatMessage()
                     {
-                        Role = "User",
+                        Role = "user",
                         Content = "Hello!"
                     })
                 .Build()

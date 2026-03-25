@@ -16,63 +16,114 @@ public class ChatCompletionsRequest
         NullValueHandling = NullValueHandling.Ignore)]
     public List<ChatMessage>? Messages { get; set; }
 
-    [JsonProperty("model",
+    [JsonProperty("temperature",
         DefaultValueHandling = DefaultValueHandling.Ignore,
         NullValueHandling = NullValueHandling.Ignore)]
     public double? Temperature { get; set; }
 
-    [JsonProperty("model",
+    [JsonProperty("topP",
         DefaultValueHandling = DefaultValueHandling.Ignore,
         NullValueHandling = NullValueHandling.Ignore)]
     public double? TopP { get; set; }
 
-    [JsonProperty("model",
+    [JsonProperty("maxTokens",
         DefaultValueHandling = DefaultValueHandling.Ignore,
         NullValueHandling = NullValueHandling.Ignore)]
     public int? MaxTokens { get; set; }
     
+    [JsonProperty("n",
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        NullValueHandling = NullValueHandling.Ignore)]
     public int? N { get; set; }
     
+    [JsonProperty("presence_penalty",
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        NullValueHandling = NullValueHandling.Ignore)]
     public double? PresencePenalty { get; set; }
     
+    [JsonProperty("frequency_penalty",
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        NullValueHandling = NullValueHandling.Ignore)]
     public double? FrequencyPenalty { get; set; }
     
+    [JsonProperty("logit_bias",
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        NullValueHandling = NullValueHandling.Ignore)]
     public Dictionary<string, int>? LogitBias { get; set; }
     
+    [JsonProperty("stop",
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        NullValueHandling = NullValueHandling.Ignore)]
     public List<string>? Stop { get; set; }
     
+    [JsonProperty("response_format",
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        NullValueHandling = NullValueHandling.Ignore)]
     public ChatCompletionResponseFormat? ResponseFormat { get; set; }
     
+    [JsonProperty("stream",
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        NullValueHandling = NullValueHandling.Ignore)]
     public bool? Stream { get; set; }
     
+    [JsonProperty("functions",
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        NullValueHandling = NullValueHandling.Ignore)]
     public List<FunctionDefinition>? Functions { get; set; }
     
+    [JsonProperty("function_call",
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        NullValueHandling = NullValueHandling.Ignore)]
     public string? FunctionCall { get; set; }
     
+    [JsonProperty("seed",
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        NullValueHandling = NullValueHandling.Ignore)]
     public int? Seed { get; set; }
     
+    [JsonProperty("user",
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        NullValueHandling = NullValueHandling.Ignore)]
     public string? User { get; set; }
 
     public class ChatMessage
     {
-        
+
+        [JsonProperty("role",
+            DefaultValueHandling = DefaultValueHandling.Ignore,
+            NullValueHandling = NullValueHandling.Ignore)]
         public string Role { get; set; } = null!;
-        
+
+        [JsonProperty("content",
+            DefaultValueHandling = DefaultValueHandling.Ignore,
+            NullValueHandling = NullValueHandling.Ignore)]
         public string Content { get; set; } = null!;
     }
 
     public class ChatCompletionResponseFormat
     {
+        [JsonProperty("type",
+            DefaultValueHandling = DefaultValueHandling.Ignore,
+            NullValueHandling = NullValueHandling.Ignore)]
         public string Type { get; set; } = "text";
     }
 
     public class FunctionDefinition
     {
-        
+
+        [JsonProperty("name",
+            DefaultValueHandling = DefaultValueHandling.Ignore,
+            NullValueHandling = NullValueHandling.Ignore)]
         public string Name { get; set; } = null!;
-        
+
+        [JsonProperty("description",
+            DefaultValueHandling = DefaultValueHandling.Ignore,
+            NullValueHandling = NullValueHandling.Ignore)]
         public string Description { get; set; } = null!;
-        
+
+        [JsonProperty("parameters",
+            DefaultValueHandling = DefaultValueHandling.Ignore,
+            NullValueHandling = NullValueHandling.Ignore)]
         public object Parameters { get; set; } = null!;
     }
 
