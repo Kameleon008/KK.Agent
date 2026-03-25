@@ -1,5 +1,7 @@
-﻿using KK.Agent.Library.Clients.OpenApi;
+﻿using System.Reflection;
+using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Clients.OpenApi.V1;
+using KK.Agent.Library.Entities;
 
 namespace KK.Agent.Library.Agents
 {
@@ -8,22 +10,84 @@ namespace KK.Agent.Library.Agents
         private OpenApiClient _llmService;
         private CognitiveAgentConfig configuration;
         private List<ChatMessage> _history = [];
-        private Dictionary<string, Func<string, string>> _tools;
+        private Dictionary<string, Func<string, Task<string>>> _tools;
+        private object? _toolsInstance;
 
+        /// <summary>
+        /// Creates a new CognitiveAgent with dictionary-based tools (legacy)
+        /// </summary>
         public CognitiveAgent(CognitiveAgentConfig configuration, OpenApiClient provider)
         {
             this._llmService = provider;
             this.configuration = configuration;
 
-            this._tools = new Dictionary<string, Func<string, string>>() 
+            this._tools = new Dictionary<string, Func<string, Task<string>>>() 
             {
-                { "get_weather", args => "Wrocław, 15°C, słonecznie" },
-                { "search_wiki", args => "Agent AI to program wykonujący zadania autonomicznie." },
+                { "get_weather", args => Task.FromResult("Wrocław, 15°C, słonecznie") },
+                { "search_wiki", args => Task.FromResult("Agent AI to program wykonujący zadania autonomicznie.") },
+            };
+        }
+
+        /// <summary>
+        /// Creates a new CognitiveAgent with reflection-based tools from an instance
+        /// </summary>
+        public CognitiveAgent(CognitiveAgentConfig configuration, OpenApiClient provider, object toolsInstance) : this(configuration, provider)
+        {
+            _toolsInstance = toolsInstance;
+            
+            // Zbuduj słownik narzędzi z instancji
+            var methods = toolsInstance.GetType().GetMethods()
+                .Where(m => m.GetCustomAttributes(typeof(AgentToolAttribute), false).Any())
+                .ToDictionary(
+                    m => m.Name,
+                    m => CreateDelegateFromMethodInfo(m)
+                );
+
+            _tools = methods;
+        }
+
+        private Func<string, Task<string>> CreateDelegateFromMethodInfo(MethodInfo method)
+        {
+            return async args =>
+            {
+                var parameters = method.GetParameters();
+                var argDict = System.Text.Json.JsonDocument.Parse(args).RootElement.EnumerateObject().ToDictionary(p => p.Name, p => p.Value.ToString());
+
+                var parameterValues = new object?[parameters.Length];
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    var param = parameters[i];
+                    if (argDict.TryGetValue(param.Name!, out var argValue) && !string.IsNullOrEmpty(argValue))
+                    {
+                        parameterValues[i] = Convert.ChangeType(argValue, param.ParameterType);
+                    }
+                    else if (param.HasDefaultValue)
+                    {
+                        parameterValues[i] = param.DefaultValue;
+                    }
+                }
+
+                var result = method.Invoke(null, parameterValues);
+                
+                if (result is Task task)
+                {
+                    await task;
+                    return (string?)task.GetType().GetProperty("Result")?.GetValue(task) ?? string.Empty;
+                }
+
+                return (string?)result ?? string.Empty;
             };
         }
 
         private List<ToolDefinition> GetTools()
         {
+            if (_toolsInstance != null)
+            {
+                // Generuj z atrybutów reflection
+                return ToolDefinitionGenerator.GenerateFromObject(_toolsInstance);
+            }
+
+            // Dla starych narzędzi słownikowych
             return _tools.Keys.Select(toolName => new ToolDefinition
             {
                 Type = "function",
@@ -94,7 +158,7 @@ namespace KK.Agent.Library.Agents
                         Console.WriteLine($"[Agent]: Wywołuję narzędzie {toolCall.Function.Name}...");
 
                         // Wykonaj logikę narzędzia
-                        string result = _tools[toolCall.Function.Name](toolCall.Function.Arguments);
+                        string result = await _tools[toolCall.Function.Name](toolCall.Function.Arguments);
 
                         // 5. Dodaj wynik narzędzia do historii z rolą "tool" i ToolCallId
                         _history.Add(new ChatMessage()
