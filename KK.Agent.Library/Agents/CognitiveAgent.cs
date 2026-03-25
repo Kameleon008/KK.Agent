@@ -67,7 +67,8 @@ namespace KK.Agent.Library.Agents
                     }
                 }
 
-                var result = method.Invoke(null, parameterValues);
+                // Użyj _toolsInstance jako target dla metody niestacjonarnej
+                var result = method.Invoke(_toolsInstance, parameterValues);
                 
                 if (result is Task task)
                 {
