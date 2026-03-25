@@ -2,11 +2,10 @@
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Clients.OpenApi.V1;
 using KK.Agent.Library.Tools;
-using System.Reflection;
 
 namespace KK.Agent.Library.Agents
 {
-    public abstract class CognitiveAgentBase(OpenApiClient provider)
+    public abstract class AgentBase(OpenApiClient provider)
     {
         private readonly List<ChatMessage> _history = [];
         private readonly Dictionary<string, Func<string, Task<string>>> _tools = new ();
@@ -14,7 +13,7 @@ namespace KK.Agent.Library.Agents
 
         private const string SystemPrompt = "You are helpful AI assistant";
 
-        protected CognitiveAgentBase(OpenApiClient provider, object toolsInstance) : this(provider)
+        protected AgentBase(OpenApiClient provider, object toolsInstance) : this(provider)
         {
             this._toolsInstances = toolsInstance;
 
@@ -22,44 +21,9 @@ namespace KK.Agent.Library.Agents
                 .GetType()
                 .GetMethods()
                 .Where(method => method.GetCustomAttributes(typeof(AgentToolAttribute), false).Any())
-                .ToDictionary(method => method.Name, CreateDelegateFromMethodInfo);
+                .ToDictionary(method => method.Name, m => ToolDelegateFactory.CreateFromMethodInfo(m, _toolsInstances));
 
             this._tools = methods;
-        }
-
-        private Func<string, Task<string>> CreateDelegateFromMethodInfo(MethodInfo method)
-        {
-            return async args =>
-            {
-                var parameters = method.GetParameters();
-                var argDict = System.Text.Json.JsonDocument.Parse(args).RootElement.EnumerateObject().ToDictionary(p => p.Name, p => p.Value.ToString());
-
-                var parameterValues = new object?[parameters.Length];
-                for (var i = 0; i < parameters.Length; i++)
-                {
-                    var param = parameters[i];
-                    if (argDict.TryGetValue(param.Name!, out var argValue) && !string.IsNullOrEmpty(argValue))
-                    {
-                        parameterValues[i] = Convert.ChangeType(argValue, param.ParameterType);
-                    }
-                    else if (param.HasDefaultValue)
-                    {
-                        parameterValues[i] = param.DefaultValue;
-                    }
-                }
-
-                var result = method.Invoke(_toolsInstances, parameterValues);
-
-                if (result is not Task task)
-                {
-                    return (string?)result ?? string.Empty;
-                }
-
-                await task;
-
-                return (string?)task.GetType().GetProperty("Result")?.GetValue(task) ?? string.Empty;
-
-            };
         }
 
         public async Task<string> RunAsync(string prompt)

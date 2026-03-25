@@ -15,7 +15,6 @@ public static class Program
         var config = ConfigService.Get<ConfigRoot>();
 
         var agent = new ExampleAgent(
-            configuration: new CognitiveAgentConfig(),
             provider: new OpenApiClient(config.Provider),
             toolsInstance: new ExampleTools());
 

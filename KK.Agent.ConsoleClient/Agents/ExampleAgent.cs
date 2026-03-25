@@ -3,7 +3,7 @@ using KK.Agent.Library.Clients.OpenApi;
 
 namespace KK.Agent.ConsoleClient.Agents
 {
-    internal class ExampleAgent : CognitiveAgentBase
+    internal class ExampleAgent : AgentBase
     {
         public ExampleAgent(OpenApiClient provider) : base(provider)
         {

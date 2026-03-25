@@ -1,6 +1,6 @@
 ﻿namespace KK.Agent.Library.Agents
 {
-    public class CognitiveAgentConfig
+    public class AgentConfig
     {
     }
 }
