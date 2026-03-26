@@ -16,7 +16,7 @@ public static class Program
 
         var agent = new ExampleAgent(
             provider: new OpenApiClient(config.Provider),
-            toolsInstance: new ExampleTools());
+            toolsInstances: [new ExampleTools()]);
 
         var question1 = "Where does Luke Skywalker come from?";
         Console.WriteLine($"Question: {question1}");

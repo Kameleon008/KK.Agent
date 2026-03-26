@@ -9,7 +9,7 @@ namespace KK.Agent.ConsoleClient.Agents
         {
         }
 
-        public ExampleAgent(OpenApiClient provider, object toolsInstance) : base(provider, toolsInstance)
+        public ExampleAgent(OpenApiClient provider, params object[] toolsInstances) : base(provider, toolsInstances)
         {
         }
     }

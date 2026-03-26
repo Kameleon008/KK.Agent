@@ -8,22 +8,33 @@ namespace KK.Agent.Library.Agents
     public abstract class AgentBase(OpenApiClient provider)
     {
         private readonly List<ChatMessage> _history = [];
+        private readonly List<ToolDefinition> _toolDefinitions = [];
         private readonly Dictionary<string, Func<string, Task<string>>> _tools = new ();
-        private readonly object? _toolsInstances;
 
         private const string SystemPrompt = "You are helpful AI assistant";
 
-        protected AgentBase(OpenApiClient provider, object toolsInstance) : this(provider)
+        protected AgentBase(OpenApiClient provider, params object[] toolsInstances) : this(provider)
         {
-            this._toolsInstances = toolsInstance;
+            foreach (var instance in toolsInstances)
+            {
+                var methods = instance.GetType()
+                    .GetMethods()
+                    .Where(method => method.GetCustomAttributes(typeof(AgentToolAttribute), false).Any())
+                    .ToDictionary(
+                        method => method.Name,
+                        m => ToolDelegateFactory.CreateFromMethodInfo(m, instance));
 
-            var methods = toolsInstance
-                .GetType()
-                .GetMethods()
-                .Where(method => method.GetCustomAttributes(typeof(AgentToolAttribute), false).Any())
-                .ToDictionary(method => method.Name, m => ToolDelegateFactory.CreateFromMethodInfo(m, _toolsInstances));
+                foreach (var kvp in methods)
+                {
+                    _tools[kvp.Key] = kvp.Value;
+                }
+            }
 
-            this._tools = methods;
+            foreach (var instance in toolsInstances)
+            {
+                var toolDefinitions = ToolDefinitionGenerator.GenerateFromObject(instance);
+                _toolDefinitions.AddRange(toolDefinitions);
+            }
         }
 
         public async Task<string> RunAsync(string prompt)
@@ -45,8 +56,7 @@ namespace KK.Agent.Library.Agents
             for (var i = 0; i < 5; i++)
             {
                 // 1. Send query to the model with tools
-                var tools = ToolDefinitionGenerator.GenerateFromObject(this._toolsInstances);
-                var response = await provider.GetChatCompletionsAsync(_history, tools);
+                var response = await provider.GetChatCompletionsAsync(_history, _toolDefinitions);
 
                 var choice = response.Choices.First();
 
