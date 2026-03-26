@@ -5,6 +5,7 @@ using KK.Agent.Library.Clients.OpenApi.V1;
 using KK.Agent.Library.Clients.OpenApi.V1.Builders;
 using KK.Agent.Library.Extensions;
 using KK.Agent.Library.Tools;
+using Newtonsoft.Json;
 
 namespace KK.Agent.Library.Agents
 {
@@ -76,6 +77,34 @@ namespace KK.Agent.Library.Agents
 
             return "Iteration limit reached without final answer.";
         }
+
+        public async Task<T?> RunAsync<T>(string prompt)
+            where T : class, new()
+        {
+            await this.RunAsync(prompt);
+
+            var request = new ChatCompletionsRequestBuilder()
+                .SetModel(_provider.Model)
+                .SetMessages(_history)
+                .SetTools(_toolDefinitions)
+                .SetJsonResponseFormat<T>()
+                .Build();
+
+            var body = request.ToString();
+
+            var response = await _provider.GetChatCompletionsAsync(request);
+            var choice = response.Choices.First();
+
+            _history.AddMessage(choice);
+
+            var result = await _handlers
+                .Single(handler => handler.Handles(choice.FinishReason))
+                .HandleAsync(choice, _history);
+
+            return JsonConvert.DeserializeObject<T>(result);
+        }
+
+
 
         private void RegisterTools(object instance)
         {

@@ -82,6 +82,21 @@ public class ChatCompletionResponseFormat
 {
     [JsonProperty("type", NullValueHandling = NullValueHandling.Ignore)]
     public string Type { get; set; } = "text";
+
+    [JsonProperty("json_schema", NullValueHandling = NullValueHandling.Ignore)]
+    public JsonSchema? JsonSchema { get; set; }
+}
+
+public class JsonSchema
+{
+    [JsonProperty("type", NullValueHandling = NullValueHandling.Ignore)]
+    public string Type { get; set; } = "object";
+
+    [JsonProperty("schema")]
+    public object Schema { get; set; } = null!;
+
+    [JsonProperty("description", NullValueHandling = NullValueHandling.Ignore)]
+    public string? Description { get; set; }
 }
 
 public class FunctionDefinition

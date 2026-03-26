@@ -19,7 +19,7 @@ public class ExamplePlanetaryDatabase
                 Population = 200000,
                 Climate = "Arid, temperate",
                 Terrain = "Deserts, mountains, mesas",
-                Gravity = "1 standard",
+                Gravity = "1.69 standard",
                 Description = "A harsh desert planet in the Outer Rim Territories. Home to Luke Skywalker and various moisture farmers."
             },
             ["Coruscant"] = new()
