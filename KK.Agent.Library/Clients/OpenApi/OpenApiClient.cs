@@ -14,6 +14,8 @@ namespace KK.Agent.Library.Clients.OpenApi
             BaseAddress = new Uri(configuration.Endpoint)
         };
 
+        public string Model => configuration.Model;
+
         public async Task<ModelsResponse> GetModelsAsync()
         {
             try
@@ -56,18 +58,9 @@ namespace KK.Agent.Library.Clients.OpenApi
             return result;
         }
 
-        public async Task<ChatCompletionsResponse> GetChatCompletionsAsync(IEnumerable<IChatMessage> messages, CancellationToken cancelationToken = default)
+        public async Task<ChatCompletionsResponse> GetChatCompletionsAsync(ChatCompletionsRequest request, CancellationToken cancelationToken = default)
         {
-            var body = new ChatCompletionsRequestBuilder()
-                .SetModel(configuration.Model)
-                .AddMessages(messages.Select(message => new ChatMessage()
-                {
-                    Role = message.Role,
-                    Content = message.Content
-                }))
-                .SetStream(false)
-                .Build()
-                .ToHttpContent();
+            var body = request.ToHttpContent();
 
             var result = await this._httpClient.PostAsync("/v1/chat/completions", body, cancelationToken);
 
@@ -76,41 +69,14 @@ namespace KK.Agent.Library.Clients.OpenApi
             return JsonConvert.DeserializeObject<ChatCompletionsResponse>(x);
         }
 
-        public async Task<ChatCompletionsResponse> GetChatCompletionsAsync(IEnumerable<IChatMessage> messages, List<ToolDefinition> tools, CancellationToken cancelationToken = default)
+        public async IAsyncEnumerable<ChatCompletionsResponse> GetChatCompletionsStreamAsync(ChatCompletionsRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var body = new ChatCompletionsRequestBuilder()
-                .SetModel(configuration.Model)
-                .AddMessages(messages.Select(message => new ChatMessage()
-                {
-                    Role = message.Role,
-                    Content = message.Content
-                }))
-                .SetTools(tools.ToArray())
-                .SetStream(false)
-                .Build()
-                .ToHttpContent();
+            var body = request.ToHttpContent();
 
-            var result = await this._httpClient.PostAsync("/v1/chat/completions", body, cancelationToken);
-
-            var x = await result.Content.ReadAsStringAsync(cancelationToken);
-
-            return JsonConvert.DeserializeObject<ChatCompletionsResponse>(x);
-        }
-
-
-        public async IAsyncEnumerable<ChatCompletionsResponse> GetChatCompletionsStreamAsync(IEnumerable<IChatMessage> messages, [EnumeratorCancellation] CancellationToken cancellationToken = default)
-        {
-            var body = new ChatCompletionsRequestBuilder()
-                .SetModel(configuration.Model)
-                .AddMessage("user", "HelloWorld!")
-                .SetStream(true)
-                .Build()
-                .ToHttpContent();
-
-            using var request = new HttpRequestMessage(HttpMethod.Post, "/v1/chat/completions") { Content = body };
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/v1/chat/completions") { Content = body };
 
             // 1. Get headers only
-            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            using var response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             // 2. Open the stream

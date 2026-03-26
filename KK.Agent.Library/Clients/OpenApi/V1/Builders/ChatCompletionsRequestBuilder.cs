@@ -14,7 +14,7 @@ namespace KK.Agent.Library.Clients.OpenApi.V1.Builders
             return this;
         }
 
-        public ChatCompletionsRequestBuilder AddMessages(IEnumerable<ChatMessage> messages)
+        public ChatCompletionsRequestBuilder SetMessages(IEnumerable<ChatMessage> messages)
         {
             _request.Messages = messages.ToList<ChatMessage>();
 
@@ -65,9 +65,9 @@ namespace KK.Agent.Library.Clients.OpenApi.V1.Builders
             return this;
         }
 
-        public ChatCompletionsRequestBuilder SetTools(params ToolDefinition[]? tools)
+        public ChatCompletionsRequestBuilder SetTools(List<ToolDefinition>? tools)
         {
-            _request.Tools = tools?.ToList();
+            _request.Tools = tools;
             return this;
         }
 

@@ -13,18 +13,14 @@ public static class Program
         ConfigService.Load();
         var config = ConfigService.Get<ConfigRoot>();
 
-        var agent = new ExampleAgent(
-            provider: new OpenApiClient(config.Provider),
-            toolsInstances: [new ExampleLoreTools(), new ExampleWeatherTools(), new ExamplePlanetaryDatabase()]);
+        var agent = new ExampleAgent(new OpenApiClient(config.Provider));
+
+        agent.AddToolFromType<ExampleLoreTools>();
+        agent.AddToolFromType<ExamplePlanetaryDatabase>();
 
         var question1 = "Where does Luke Skywalker come from?";
         Console.WriteLine($"Question: {question1}");
         Console.WriteLine($"Response: \n\n{await agent.RunAsync(question1)}\n");
-        Console.WriteLine("-------------------------------");
-
-        var question2 = "What is the weather in Wroclaw, Gdańsk and Warsaw?";
-        Console.WriteLine($"Question: {question2}");
-        Console.WriteLine($"Response: \n\n{await agent.RunAsync(question2)}\n");
         Console.WriteLine("-------------------------------");
 
         var question3 = "Tell me about the planet Tatooine - what's its climate and population?";
