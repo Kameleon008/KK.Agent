@@ -1,6 +1,7 @@
 ﻿using KK.Agent.Library.Attributes;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Clients.OpenApi.V1;
+using KK.Agent.Library.Extensions;
 using KK.Agent.Library.Tools;
 
 namespace KK.Agent.Library.Agents
@@ -17,23 +18,11 @@ namespace KK.Agent.Library.Agents
         {
             foreach (var instance in toolsInstances)
             {
-                var methods = instance.GetType()
-                    .GetMethods()
-                    .Where(method => method.GetCustomAttributes(typeof(AgentToolAttribute), false).Any())
-                    .ToDictionary(
-                        method => method.Name,
-                        m => ToolDelegateFactory.CreateFromMethodInfo(m, instance));
-
-                foreach (var kvp in methods)
-                {
-                    _tools[kvp.Key] = kvp.Value;
-                }
-            }
-
-            foreach (var instance in toolsInstances)
-            {
                 var toolDefinitions = ToolDefinitionGenerator.GenerateFromObject(instance);
                 _toolDefinitions.AddRange(toolDefinitions);
+
+                var tools = ToolGenerator.GenerateFromObject(instance);
+                _tools.AddRange(tools);
             }
         }
 

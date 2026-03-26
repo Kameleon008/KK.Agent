@@ -1,9 +1,9 @@
 ﻿
 using KK.Agent.Library.Attributes;
 
-namespace KK.Agent.ConsoleClient.Tools
+namespace KK.Agent.Library.Examples.Tools
 {
-    public class ExampleTools
+    public class ExampleLoreTools
     {
         [AgentTool("Search the database for character home planets.")]
         public async Task<string> search_lore(
@@ -22,26 +22,12 @@ namespace KK.Agent.ConsoleClient.Tools
             }
         }
 
-        [AgentTool("Get weather information for a specific location.")]
-        public string get_weather(string city)
-        {
-            return $"{city}, {new Random().NextInt64(5, 20)}°C";
-        }
-
         [AgentTool("Search wiki for information about any topic.")]
         public async Task<string> search_wiki(
             [ParameterDescription("topic to search")] string query)
         {
             await Task.Delay(200);
             return $"Wiki results for: {query} - Agent AI is a program that performs tasks autonomously.";
-        }
-
-        [AgentTool("Calculate the sum of two numbers.")]
-        public double add_numbers(
-            [ParameterDescription("first number")] int a,
-            [ParameterDescription("second number")] int b)
-        {
-            return a + b;
         }
     }
 }

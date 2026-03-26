@@ -1,9 +1,8 @@
-using KK.Agent.ConsoleClient.Agents;
-using KK.Agent.ConsoleClient.Tools;
-using KK.Agent.Library.Agents;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Configuration;
 using KK.Agent.Library.Configuration.Models;
+using KK.Agent.Library.Examples.Agents;
+using KK.Agent.Library.Examples.Tools;
 
 namespace KK.Agent.ConsoleClient;
 
@@ -16,13 +15,12 @@ public static class Program
 
         var agent = new ExampleAgent(
             provider: new OpenApiClient(config.Provider),
-            toolsInstances: [new ExampleTools()]);
+            toolsInstances: [new ExampleLoreTools(), new ExampleWeatherTools()]);
 
         var question1 = "Where does Luke Skywalker come from?";
         Console.WriteLine($"Question: {question1}");
         Console.WriteLine($"Response: {await agent.RunAsync(question1)}\n");
         Console.WriteLine("===============================");
-
 
         var question2 = "What is the weather in Wroclaw, Gdańsk and Warsaw?";
         Console.WriteLine($"Question: {question2}");
