@@ -13,7 +13,7 @@ namespace KK.Agent.Library.Agents
         private readonly Dictionary<string, Func<string, Task<string>>> _tools = new();
         private readonly List<IFinishReasonHandler> _handlers = [];
 
-        private const string SystemPrompt = "You are helpful AI assistant";
+        protected virtual string SystemPrompt { get; set; } = "You are helpful AI assistant";
 
         protected AgentBase(OpenApiClient provider, params object[] toolsInstances) : this(provider)
         {
@@ -48,7 +48,14 @@ namespace KK.Agent.Library.Agents
 
                 _history.AddMessage(choice);
 
-                return await _handlers.Single(handler => handler.Handles(choice.FinishReason)).HandleAsync(choice); ;
+                var result =  await _handlers.Single(handler => handler.Handles(choice.FinishReason)).HandleAsync(choice);
+
+                if (result == null)
+                {
+                    continue;
+                }
+
+                return result;
             }
 
             return "Iteration limit reached without final answer.";

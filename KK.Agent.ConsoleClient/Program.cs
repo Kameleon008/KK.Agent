@@ -19,18 +19,18 @@ public static class Program
 
         var question1 = "Where does Luke Skywalker come from?";
         Console.WriteLine($"Question: {question1}");
-        Console.WriteLine($"Response: {await agent.RunAsync(question1)}\n");
-        Console.WriteLine("===============================");
+        Console.WriteLine($"Response: \n\n{await agent.RunAsync(question1)}\n");
+        Console.WriteLine("-------------------------------");
 
         var question2 = "What is the weather in Wroclaw, Gdańsk and Warsaw?";
         Console.WriteLine($"Question: {question2}");
-        Console.WriteLine($"Response: {await agent.RunAsync(question2)}\n");
-        Console.WriteLine("===============================");
+        Console.WriteLine($"Response: \n\n{await agent.RunAsync(question2)}\n");
+        Console.WriteLine("-------------------------------");
 
         var question3 = "Who are you?";
         Console.WriteLine($"Question: {question3}");
-        Console.WriteLine($"Response: {await agent.RunAsync(question3)}\n");
-        Console.WriteLine("===============================");
+        Console.WriteLine($"Response: \n\n{await agent.RunAsync(question3)}\n");
+        Console.WriteLine("-------------------------------");
 
         Console.WriteLine("\n\nPress any key to exit...");
         Console.ReadKey();

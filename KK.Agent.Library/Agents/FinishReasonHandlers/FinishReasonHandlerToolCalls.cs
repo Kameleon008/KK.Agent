@@ -17,7 +17,7 @@ namespace KK.Agent.Library.Agents.FinishReasonHandlers
 
         public bool Handles(string finishReason) => finishReason == "tool_calls";
 
-        public async Task<string> HandleAsync(ChatCompletionChoice choice)
+        public async Task<string?> HandleAsync(ChatCompletionChoice choice)
         {
             foreach (var toolCall in choice.Message.ToolCalls!)
             {
@@ -33,8 +33,7 @@ namespace KK.Agent.Library.Agents.FinishReasonHandlers
                 });
             }
 
-            // Return null to indicate processing should continue (no final answer yet)
-            return string.Empty;
+            return null;
         }
     }
 }
