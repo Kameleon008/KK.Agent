@@ -6,7 +6,7 @@ namespace KK.Agent.Library.Agents.FinishReasonHandlers
     {
         public bool Handles(string finishReason) => finishReason == "stop";
 
-        public Task<string?> HandleAsync(ChatCompletionChoice choice)
+        public Task<string?> HandleAsync(ChatCompletionChoice choice, ChatHistory history)
         {
             return Task.FromResult(choice.Message?.Content);
         }

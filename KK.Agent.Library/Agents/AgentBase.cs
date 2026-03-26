@@ -28,27 +28,26 @@ namespace KK.Agent.Library.Agents
 
             _handlers.Add(new FinishReasonHandlerStop());
             _handlers.Add(new FinishReasonHandlerLength());
-            _handlers.Add(new FinishReasonHandlerToolCalls(_tools, _history));
+            _handlers.Add(new FinishReasonHandlerToolCalls(_tools));
             _handlers.Add(new FinishReasonHandlerContentFilter());
         }
 
         public async Task<string> RunAsync(string prompt)
         {
             this._history.Clear();
-
             this._history.AddSystemMessage(SystemPrompt);
-
             this._history.AddUserMessage(prompt);
 
             foreach (var _ in Enumerable.Range(0, 5))
             {
                 var response = await provider.GetChatCompletionsAsync(_history, _toolDefinitions);
-
                 var choice = response.Choices.First();
 
                 _history.AddMessage(choice);
 
-                var result =  await _handlers.Single(handler => handler.Handles(choice.FinishReason)).HandleAsync(choice);
+                var result =  await _handlers
+                    .Single(handler => handler.Handles(choice.FinishReason))
+                    .HandleAsync(choice, _history);
 
                 if (result == null)
                 {

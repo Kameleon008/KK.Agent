@@ -6,6 +6,6 @@ namespace KK.Agent.Library.Agents.FinishReasonHandlers
     {
         bool Handles(string finishReason);
 
-        Task<string?> HandleAsync(ChatCompletionChoice choice);
+        Task<string?> HandleAsync(ChatCompletionChoice choice, ChatHistory history);
     }
 }

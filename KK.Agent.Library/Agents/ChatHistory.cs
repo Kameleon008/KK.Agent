@@ -2,7 +2,7 @@
 
 namespace KK.Agent.Library.Agents
 {
-    internal class ChatHistory : List<ChatMessage>
+    public class ChatHistory : List<ChatMessage>
     {
 
         public void AddMessage(string role, string content)
