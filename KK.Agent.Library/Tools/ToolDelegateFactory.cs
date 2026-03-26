@@ -1,4 +1,5 @@
 using System.Reflection;
+using Newtonsoft.Json;
 
 namespace KK.Agent.Library.Tools
 {
@@ -30,13 +31,31 @@ namespace KK.Agent.Library.Tools
 
                 if (result is not Task task)
                 {
-                    return (string?)result ?? string.Empty;
+                    return SerializeResult(result);
                 }
 
                 await task;
 
-                return (string?)task.GetType().GetProperty("Result")?.GetValue(task) ?? string.Empty;
+                var taskResult = task.GetType().GetProperty("Result")?.GetValue(task);
+                return SerializeResult(taskResult);
             };
+        }
+
+        private static string SerializeResult(object? result)
+        {
+            if (result == null)
+            {
+                return string.Empty;
+            }
+
+            // If the result is already a string, return it directly
+            if (result is string str)
+            {
+                return str;
+            }
+
+            // Otherwise, serialize to JSON
+            return JsonConvert.SerializeObject(result, Formatting.Indented);
         }
     }
 }

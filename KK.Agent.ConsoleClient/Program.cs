@@ -15,7 +15,7 @@ public static class Program
 
         var agent = new ExampleAgent(
             provider: new OpenApiClient(config.Provider),
-            toolsInstances: [new ExampleLoreTools(), new ExampleWeatherTools()]);
+            toolsInstances: [new ExampleLoreTools(), new ExampleWeatherTools(), new ExamplePlanetaryDatabase()]);
 
         var question1 = "Where does Luke Skywalker come from?";
         Console.WriteLine($"Question: {question1}");
@@ -27,9 +27,14 @@ public static class Program
         Console.WriteLine($"Response: \n\n{await agent.RunAsync(question2)}\n");
         Console.WriteLine("-------------------------------");
 
-        var question3 = "Who are you?";
+        var question3 = "Tell me about the planet Tatooine - what's its climate and population?";
         Console.WriteLine($"Question: {question3}");
         Console.WriteLine($"Response: \n\n{await agent.RunAsync(question3)}\n");
+        Console.WriteLine("-------------------------------");
+
+        var question4 = "Who are you?";
+        Console.WriteLine($"Question: {question4}");
+        Console.WriteLine($"Response: \n\n{await agent.RunAsync(question4)}\n");
         Console.WriteLine("-------------------------------");
 
         Console.WriteLine("\n\nPress any key to exit...");
