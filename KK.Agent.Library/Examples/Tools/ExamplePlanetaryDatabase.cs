@@ -64,7 +64,7 @@ public class ExamplePlanetaryDatabase
             }
         };
 
-        if (planets.TryGetValue(planet_name.ToLower(), out var planet))
+        if (planets.TryGetValue(planet_name, out var planet))
         {
             return planet;
         }

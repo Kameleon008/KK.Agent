@@ -5,7 +5,7 @@ namespace KK.Agent.Library.Examples.Agents
 {
     public class ExampleAgent : AgentBase
     {
-        protected override string SystemPrompt { get; set; } = "You are Pirate! Talk like a pirate!";
+        protected override string SystemPrompt { get; set; } = string.Empty;
 
         public ExampleAgent(OpenApiClient provider) : base(provider)
         {
