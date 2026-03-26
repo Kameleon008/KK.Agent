@@ -1,4 +1,4 @@
-﻿using KK.Agent.Library.Attributes;
+﻿using KK.Agent.Library.Agents.FinishReasonHandlers;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Clients.OpenApi.V1;
 using KK.Agent.Library.Extensions;
@@ -8,9 +8,10 @@ namespace KK.Agent.Library.Agents
 {
     public abstract class AgentBase(OpenApiClient provider)
     {
-        private readonly List<ChatMessage> _history = [];
+        private readonly ChatHistory _history = [];
         private readonly List<ToolDefinition> _toolDefinitions = [];
-        private readonly Dictionary<string, Func<string, Task<string>>> _tools = new ();
+        private readonly Dictionary<string, Func<string, Task<string>>> _tools = new();
+        private readonly List<IFinishReasonHandler> _handlers = [];
 
         private const string SystemPrompt = "You are helpful AI assistant";
 
@@ -24,73 +25,30 @@ namespace KK.Agent.Library.Agents
                 var tools = ToolGenerator.GenerateFromObject(instance);
                 _tools.AddRange(tools);
             }
+
+            _handlers.Add(new FinishReasonHandlerStop());
+            _handlers.Add(new FinishReasonHandlerLength());
+            _handlers.Add(new FinishReasonHandlerToolCalls(_tools, _history));
+            _handlers.Add(new FinishReasonHandlerContentFilter());
         }
 
         public async Task<string> RunAsync(string prompt)
         {
             this._history.Clear();
 
-            this._history.Add(new ChatMessage
-            {
-                Role = "system",
-                Content = SystemPrompt
-            });
+            this._history.AddSystemMessage(SystemPrompt);
 
-            this._history.Add(new ChatMessage
-            {
-                Role = "user",
-                Content = prompt
-            });
+            this._history.AddUserMessage(prompt);
 
-            for (var i = 0; i < 5; i++)
+            foreach (var _ in Enumerable.Range(0, 5))
             {
-                // 1. Send query to the model with tools
                 var response = await provider.GetChatCompletionsAsync(_history, _toolDefinitions);
 
                 var choice = response.Choices.First();
 
-                // 2. Add model's (assistant) response to history
-                _history.Add(new ChatMessage
-                {
-                    Role = choice.Message.Role,
-                    Content = choice.Message.Content,
-                    ToolCalls = choice.Message.ToolCalls!.Select(call => new ToolCall
-                    {
-                        Id = call.Id!,
-                        Type = call.Type!,
-                        Function = new ChatMessageFunctionCall
-                        {
-                            Arguments = call.Function!.Arguments,
-                            Name = call.Function.Name
-                        }
-                    }).ToList()
+                _history.AddMessage(choice);
 
-                });
-
-                // 3. Check if model wants to finish (FinishReason == "stop")
-                if (choice.FinishReason == "stop")
-                {
-                    return choice.Message.Content;
-                }
-
-                // 4. Handle Tool Calling (FinishReason == "tool_calls")
-                if (choice.FinishReason == "tool_calls")
-                {
-                    foreach (var toolCall in choice.Message.ToolCalls!)
-                    {
-                        Console.WriteLine($"[Agent]: Calls tool: {toolCall.Function!.Name}...");
-
-                        var result = await _tools[toolCall.Function!.Name](toolCall.Function.Arguments);
-
-                        // 5. Add tool result to history with role "tool" and ToolCallId
-                        _history.Add(new ChatMessage()
-                        {
-                            Role = "tool",
-                            Content = result,
-                            ToolCallId = toolCall.Id
-                        });
-                    }
-                }
+                return await _handlers.Single(handler => handler.Handles(choice.FinishReason)).HandleAsync(choice); ;
             }
 
             return "Iteration limit reached without final answer.";
