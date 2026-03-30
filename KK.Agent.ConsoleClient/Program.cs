@@ -4,6 +4,7 @@ using KK.Agent.Library.Configuration.Models;
 using KK.Agent.Library.Examples.Agents;
 using KK.Agent.Library.Examples.Models;
 using KK.Agent.Library.Examples.Tools;
+using Spectre.Console;
 
 namespace KK.Agent.ConsoleClient;
 
