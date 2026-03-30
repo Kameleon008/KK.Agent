@@ -20,7 +20,7 @@ namespace KK.Agent.Library.Clients.OpenApi.V1
         public string SystemFingerprint { get; set; }
 
         [JsonProperty("choices")]
-        public List<ChunkChoice> Choices { get; set; }
+        public List<ChunkChoice>? Choices { get; set; }
     }
 
     public class ChunkChoice
@@ -50,7 +50,7 @@ namespace KK.Agent.Library.Clients.OpenApi.V1
         public string ReasoningContent { get; set; }
 
         [JsonProperty("tool_calls")]
-        public List<ChunkToolCall> ToolCalls { get; set; }
+        public List<ChunkToolCall>? ToolCalls { get; set; }
     }
 
     public class ChunkToolCall
@@ -65,7 +65,7 @@ namespace KK.Agent.Library.Clients.OpenApi.V1
         public string Type { get; set; }
 
         [JsonProperty("function")]
-        public ChunkFunctionCall Function { get; set; }
+        public ChunkFunctionCall? Function { get; set; }
     }
 
     public class ChunkFunctionCall

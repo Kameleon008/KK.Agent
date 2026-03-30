@@ -5,7 +5,6 @@ using KK.Agent.Library.Clients.OpenApi.V1.Builders;
 using KK.Agent.Library.Extensions;
 using KK.Agent.Library.Tools;
 using Newtonsoft.Json;
-using System.Reflection;
 using System.Text;
 
 namespace KK.Agent.Library.Agents
@@ -100,7 +99,7 @@ namespace KK.Agent.Library.Agents
                 .Single(handler => handler.Handles(choice.FinishReason))
                 .HandleAsync(choice, _history);
 
-            return JsonConvert.DeserializeObject<T>(result);
+            return result == null ? null : JsonConvert.DeserializeObject<T>(result);
         }
 
         public async IAsyncEnumerable<string> RunStreamAsync(string prompt)
@@ -111,6 +110,8 @@ namespace KK.Agent.Library.Agents
 
             foreach (var _ in Enumerable.Range(0, 5))
             {
+                ChatCompletionsResponse? synthesizedResponse = null;
+
                 var request = new ChatCompletionsRequestBuilder()
                     .SetModel(_provider.Model)
                     .SetMessages(_history)
@@ -118,37 +119,30 @@ namespace KK.Agent.Library.Agents
                     .SetStream(true)
                     .Build();
 
-                StringBuilder fullContent = new StringBuilder();
-                ChatCompletionsResponse synthesizedResponse = null;
+                var fullContent = new StringBuilder();
 
                 await foreach (var chunk in _provider.GetChatCompletionsStreamAsync(request))
                 {
-                    var choice = chunk.Choices.First();
+                    var choice = chunk.Choices?.FirstOrDefault();
 
-                    if (choice.Delta.ReasoningContent != null)
+                    if (choice?.Delta == null)
                     {
-                        fullContent.Append(choice.Delta.ReasoningContent);
-
-                        yield return choice.Delta.ReasoningContent;
+                        continue;
                     }
 
-                    // Jeśli to zwykły tekst (content), wypychaj go od razu
-                    if (choice.Delta.Content != null)
-                    {
-                        fullContent.Append(choice.Delta.Content);
+                    fullContent.Append(choice.Delta.ReasoningContent);
 
-                        yield return choice.Delta.Content;
-                    }
+                    yield return choice.Delta.ReasoningContent;
 
-                    // Zbieraj informacje o Tool Calls (jeśli występują w streamie)
-                    // Stream zwraca Tool Calls w kawałkach, musisz je agregować w 'synthesizedResponse'
+                    fullContent.Append(choice.Delta.Content);
+
+                    yield return choice.Delta.Content;
+
                     UpdateSynthesizedResponse(ref synthesizedResponse, chunk);
                 }
 
-                // Po zakończeniu streama, dodaj pełną odpowiedź do historii
-                _history.AddMessage(synthesizedResponse.Choices.Single());
+                _history.AddMessage(synthesizedResponse!.Choices.Single());
 
-                // Obsługa FinishReason (np. wywołanie narzędzi)
                 var result = await _handlers
                     .Single(h => h.Handles(synthesizedResponse.Choices.Single().FinishReason))
                     .HandleAsync(synthesizedResponse.Choices.Single(), _history);
@@ -176,28 +170,28 @@ namespace KK.Agent.Library.Agents
         }
 
 
-        private void UpdateSynthesizedResponse(ref ChatCompletionsResponse synthesized, ChatCompletionsChunk chunk)
+        private static void UpdateSynthesizedResponse(ref ChatCompletionsResponse? synthesized, ChatCompletionsChunk chunk)
         {
-            if (synthesized == null)
+            synthesized ??= new ChatCompletionsResponse
             {
-                synthesized = new ChatCompletionsResponse
-                {
-                    Id = chunk.Id,
-                    Choices = new List<ChatCompletionChoice> { new ChatCompletionChoice { Message = new ChatCompletionMessage() { Content = "" } } }
-                };
+                Id = chunk.Id,
+                Choices = [new ChatCompletionChoice { Message = new ChatCompletionMessage { Content = "" } }]
+            };
+
+            var choice = chunk.Choices?.FirstOrDefault();
+            var message = synthesized.Choices?.FirstOrDefault()?.Message;
+
+            if (choice == null || message == null)
+            {
+                return;
             }
 
-            var choice = chunk.Choices[0];
-            var message = synthesized.Choices[0].Message;
-
-            // ✅ Role
-            if (!string.IsNullOrEmpty(choice.Delta?.Role))
+            if (!string.IsNullOrEmpty(choice.Delta.Role))
             {
                 message.Role = choice.Delta.Role;
             }
 
-            // Agregacja tekstu
-            if (!string.IsNullOrEmpty(choice.Delta?.Content))
+            if (!string.IsNullOrEmpty(choice.Delta.Content))
             {
                 message.Content += choice.Delta.Content;
             }
@@ -207,14 +201,12 @@ namespace KK.Agent.Library.Agents
                 message.ReasoningContent += choice.Delta.ReasoningContent;
             }
 
-            // Agregacja Tool Calls
-            if (choice.Delta?.ToolCalls != null)
+            if (choice.Delta.ToolCalls != null)
             {
-                if (message.ToolCalls == null) message.ToolCalls = new List<ChatCompletionToolCall>();
+                message.ToolCalls ??= [];
 
                 foreach (var toolDelta in choice.Delta.ToolCalls)
                 {
-                    // Upewnienie się, że lista ma odpowiedni rozmiar dla danego indeksu
                     while (message.ToolCalls.Count <= toolDelta.Index)
                     {
                         message.ToolCalls.Add(new ChatCompletionToolCall { Function = new ChatCompletionToolCallFunction() { Arguments = "" } });
@@ -228,21 +220,17 @@ namespace KK.Agent.Library.Agents
                     if (!string.IsNullOrEmpty(toolDelta.Type))
                         existingTool.Type = toolDelta.Type;
 
-                    if (toolDelta.Function != null)
-                    {
-                        if (!string.IsNullOrEmpty(toolDelta.Function.Name))
-                            existingTool.Function.Name += toolDelta.Function.Name;
+                    if (toolDelta.Function != null && !string.IsNullOrEmpty(toolDelta.Function.Name))
+                        existingTool.Function?.Name += toolDelta.Function.Name;
 
-                        if (!string.IsNullOrEmpty(toolDelta.Function.Arguments))
-                            existingTool.Function.Arguments += toolDelta.Function.Arguments;
-                    }
+                    if (toolDelta.Function != null && !string.IsNullOrEmpty(toolDelta.Function.Arguments))
+                        existingTool.Function?.Arguments += toolDelta.Function.Arguments;
                 }
             }
 
-            // Zapisanie powodu zakończenia (pojawia się w ostatnim chunku)
             if (!string.IsNullOrEmpty(choice.FinishReason))
             {
-                synthesized.Choices.Single().FinishReason = choice.FinishReason;
+                synthesized.Choices?.Single().FinishReason = choice.FinishReason;
             }
         }
 
