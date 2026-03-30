@@ -1,3 +1,7 @@
+using KK.Agent.Library.Clients.OpenApi;
+using KK.Agent.Library.Configuration.Models;
+using KK.Agent.WebAPI.Agents;
+
 namespace KK.Agent.WebAPI;
 public static class Program
 {
@@ -10,6 +14,16 @@ public static class Program
         builder.Services.AddControllers();
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
+
+        builder.Services.AddSingleton<ConfigProvider>(_ =>
+        {
+            var config = new ConfigProvider();
+            builder.Configuration.GetSection("Provider").Bind(config);
+            return config;
+        });
+        
+        builder.Services.AddTransient<OpenApiClient>();
+        builder.Services.AddTransient<OrchestratorAgent>();
 
         var app = builder.Build();
 
