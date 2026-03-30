@@ -6,7 +6,7 @@ namespace KK.Agent.Library.Clients
     {
         public Task<ChatCompletionsResponse> GetChatCompletionsAsync(ChatCompletionsRequest request, CancellationToken cancellationToken = default);
 
-        public IAsyncEnumerable<ChatCompletionsResponse> GetChatCompletionsStreamAsync(ChatCompletionsRequest request, CancellationToken cancellationToken);
+        public IAsyncEnumerable<ChatCompletionsChunk> GetChatCompletionsStreamAsync(ChatCompletionsRequest request, CancellationToken cancellationToken);
 
     }
 

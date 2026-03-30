@@ -20,15 +20,23 @@ public static class Program
         agent.AddToolFromType<ExampleLoreTools>();
         agent.AddToolFromType<ExamplePlanetaryDatabase>();
 
-        var question1 = "Where does Luke Skywalker come from? Tell me about his home planet";
-        Console.WriteLine($"Question: {question1}");
-        Console.WriteLine($"Response: \n\n{await agent.RunAsync<CharacterWithPlanetInfo>(question1)}\n");
-        Console.WriteLine("-------------------------------");
-
-        //var question3 = "Tell me about the planet Tatooine - what's its climate and population?";
-        //Console.WriteLine($"Question: {question3}");
-        //Console.WriteLine($"Response: \n\n{await agent.RunAsync(question3)}\n");
+        //var question1 = "Where does Luke Skywalker come from? Tell me about his home planet";
+        //Console.WriteLine($"Question: {question1}");
+        //Console.WriteLine($"Response: \n\n{await agent.RunAsync<CharacterWithPlanetInfo>(question1)}\n");
         //Console.WriteLine("-------------------------------");
+
+        var question3 = "Where does Luke Skywalker come from? Tell me about his home planet";
+        Console.WriteLine($"Question: {question3}");
+        Console.Write("Response: "); // Używamy Write, żeby tekst pojawiał się w tej samej linii
+
+        // Używamy await foreach do konsumowania strumienia
+        await foreach (var chunk in agent.RunStreamAsync(question3))
+        {
+            // Wypisujemy każdy kawałek natychmiast bez nowej linii
+            Console.Write(chunk);
+        }
+
+        Console.WriteLine("\n-------------------------------");
 
         //var question4 = "Who are you?";
         //Console.WriteLine($"Question: {question4}");

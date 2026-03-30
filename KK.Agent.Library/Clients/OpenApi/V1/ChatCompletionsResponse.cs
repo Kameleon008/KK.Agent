@@ -18,7 +18,7 @@ public class ChatCompletionsResponse
     public string Model { get; set; } = string.Empty;
 
     [JsonProperty("choices", NullValueHandling = NullValueHandling.Ignore)]
-    public ChatCompletionChoice[] Choices { get; set; } = [];
+    public List<ChatCompletionChoice> Choices { get; set; } = [];
 
     [JsonProperty("usage", NullValueHandling = NullValueHandling.Ignore)]
     public ChatCompletionUsage? Usage { get; set; }
@@ -57,7 +57,7 @@ public class ChatCompletionMessage
     public string Content { get; set; } = string.Empty;
 
     [JsonProperty("tool_calls", NullValueHandling = NullValueHandling.Ignore)]
-    public ChatCompletionToolCall[]? ToolCalls { get; set; }
+    public List<ChatCompletionToolCall>? ToolCalls { get; set; }
 }
 
 public class ChatCompletionToolCall

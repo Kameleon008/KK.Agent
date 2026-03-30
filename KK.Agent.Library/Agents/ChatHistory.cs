@@ -30,7 +30,7 @@ namespace KK.Agent.Library.Agents
             {
                 Role = choice.Message.Role,
                 Content = choice.Message.Content,
-                ToolCalls = choice.Message.ToolCalls!.Select(call => new ToolCall
+                ToolCalls = choice.Message.ToolCalls?.Select(call => new ToolCall
                 {
                     Id = call.Id!,
                     Type = call.Type!,

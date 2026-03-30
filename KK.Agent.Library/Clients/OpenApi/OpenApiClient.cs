@@ -69,7 +69,7 @@ namespace KK.Agent.Library.Clients.OpenApi
             return JsonConvert.DeserializeObject<ChatCompletionsResponse>(x);
         }
 
-        public async IAsyncEnumerable<ChatCompletionsResponse> GetChatCompletionsStreamAsync(ChatCompletionsRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<ChatCompletionsChunk> GetChatCompletionsStreamAsync(ChatCompletionsRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var body = request.ToHttpContent();
 
@@ -77,29 +77,36 @@ namespace KK.Agent.Library.Clients.OpenApi
 
             // 1. Get headers only
             using var response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-            response.EnsureSuccessStatusCode();
+
+            if (response.IsSuccessStatusCode == false)
+            {
+                var result = await response.Content.ReadAsStringAsync(cancellationToken);
+                throw new Exception($"Request failed with status code {response.StatusCode}: {result}");
+            }
+
 
             // 2. Open the stream
             await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             using var reader = new StreamReader(stream);
 
-            // 3. Read line by line and yield back to the caller
             while (await reader.ReadLineAsync(cancellationToken) is { } line)
             {
-                if (string.IsNullOrWhiteSpace(line) || line == "data: [DONE]") continue;
-
-                if (!line.StartsWith("data: "))
+                if (string.IsNullOrWhiteSpace(line))
                 {
                     continue;
                 }
 
-                var json = line.Substring(6);
-
-                var result = JsonConvert.DeserializeObject<ChatCompletionsResponse>(json);
-
-                if (result != null)
+                if (line.StartsWith("data: [DONE]") || line.StartsWith("data: ") is false)
                 {
-                    yield return result;
+                    break;
+                }
+
+                var json = line.Substring(6);
+                var chunk = JsonConvert.DeserializeObject<ChatCompletionsChunk>(json);
+
+                if (chunk != null)
+                {
+                    yield return chunk;
                 }
             }
         }

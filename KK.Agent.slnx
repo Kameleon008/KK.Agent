@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="KK.Agent.ConsoleClient/KK.Agent.ConsoleClient.csproj" Id="f0e61c58-510e-406f-bd73-557c72c1f980" />
   <Project Path="KK.Agent.Library/KK.Agent.Library.csproj" />
+  <Project Path="KK.Agent.WebAPI/KK.Agent.WebAPI.csproj" Id="a0c7db32-23fa-439f-a281-7cad62797581" />
 </Solution>
