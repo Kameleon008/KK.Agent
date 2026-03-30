@@ -2,9 +2,7 @@ using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Configuration;
 using KK.Agent.Library.Configuration.Models;
 using KK.Agent.Library.Examples.Agents;
-using KK.Agent.Library.Examples.Models;
 using KK.Agent.Library.Examples.Tools;
-using Spectre.Console;
 
 namespace KK.Agent.ConsoleClient;
 
@@ -15,10 +13,9 @@ public static class Program
         ConfigService.Load();
         var config = ConfigService.Get<ConfigRoot>();
 
-        var agent = new ExampleAgent(new OpenApiClient(config.Provider));
+        var orchestratorAgent = new OrchestratorAgent(new OpenApiClient(config.Provider));
+        orchestratorAgent.AddToolFromType<OrchestratorTools>();
 
-        agent.AddToolFromType<ExampleLoreTools>();
-        agent.AddToolFromType<ExamplePlanetaryDatabase>();
 
         //var question1 = "Where does Luke Skywalker come from? Tell me about his home planet";
         //Console.WriteLine($"Question: {question1}");
@@ -30,7 +27,7 @@ public static class Program
         Console.Write("Response: "); // Używamy Write, żeby tekst pojawiał się w tej samej linii
 
         // Używamy await foreach do konsumowania strumienia
-        await foreach (var chunk in agent.RunStreamAsync(question3))
+        await foreach (var chunk in orchestratorAgent.RunStreamAsync(question3))
         {
             // Wypisujemy każdy kawałek natychmiast bez nowej linii
             Console.Write(chunk);
