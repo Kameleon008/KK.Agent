@@ -56,6 +56,9 @@ public class ChatCompletionMessage
     [JsonProperty("content", NullValueHandling = NullValueHandling.Ignore)]
     public string Content { get; set; } = string.Empty;
 
+    [JsonProperty("reasoning_content", NullValueHandling = NullValueHandling.Ignore)]
+    public string ReasoningContent { get; set; } = string.Empty;
+
     [JsonProperty("tool_calls", NullValueHandling = NullValueHandling.Ignore)]
     public List<ChatCompletionToolCall>? ToolCalls { get; set; }
 }

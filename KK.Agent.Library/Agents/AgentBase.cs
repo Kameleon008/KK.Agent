@@ -125,10 +125,18 @@ namespace KK.Agent.Library.Agents
                 {
                     var choice = chunk.Choices.First();
 
+                    if (choice.Delta.ReasoningContent != null)
+                    {
+                        fullContent.Append(choice.Delta.ReasoningContent);
+
+                        yield return choice.Delta.ReasoningContent;
+                    }
+
                     // Jeśli to zwykły tekst (content), wypychaj go od razu
                     if (choice.Delta.Content != null)
                     {
                         fullContent.Append(choice.Delta.Content);
+
                         yield return choice.Delta.Content;
                     }
 
@@ -192,6 +200,11 @@ namespace KK.Agent.Library.Agents
             if (!string.IsNullOrEmpty(choice.Delta?.Content))
             {
                 message.Content += choice.Delta.Content;
+            }
+
+            if (!string.IsNullOrEmpty(choice.Delta.ReasoningContent))
+            {
+                message.ReasoningContent += choice.Delta.ReasoningContent;
             }
 
             // Agregacja Tool Calls
