@@ -1,37 +1,47 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Threading.Channels;
+using Newtonsoft.Json;
 
 namespace KK.Agent.Library.Agents
 {
     public class AgentLogger
     {
-        private readonly Channel<string> _channel = Channel.CreateUnbounded<string>();
+        private readonly Channel<AgentLoggerModel> _channel = Channel.CreateUnbounded<AgentLoggerModel>();
 
-        // 🔥 To wołasz z innych serwisów (zamiast Observer.Notify)
         public async Task PublishAsync(string agentId, string message)
         {
             var log = $"[{agentId}]: {message}";
             Console.WriteLine(log);
-            await _channel.Writer.WriteAsync(log);
+            await _channel.Writer.WriteAsync(new AgentLoggerModel
+            {
+                AgentId = agentId,
+                Message = message
+            });
         }
 
-        // 🔥 To konsumuje controller
-        public async IAsyncEnumerable<string> GetLogsAsync(
-            [EnumeratorCancellation] CancellationToken ct)
+        public async IAsyncEnumerable<string> GetLogsAsync([EnumeratorCancellation] CancellationToken ct)
         {
             while (await _channel.Reader.WaitToReadAsync(ct))
             {
                 while (_channel.Reader.TryRead(out var log))
                 {
-                    yield return log;
+                    yield return JsonConvert.SerializeObject(log);
                 }
             }
         }
 
-        // opcjonalnie — zakończenie streama
         public void Complete()
         {
             _channel.Writer.Complete();
         }
+    }
+
+    public class AgentLoggerModel
+    {
+        [JsonProperty("agentId")]
+        public string AgentId { get; set; }
+
+        [JsonProperty("message")]
+        public string Message { get; set; }
     }
 }

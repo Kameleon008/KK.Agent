@@ -1,4 +1,4 @@
-@KK.Agent.WebAPI_HostAddress = http://localhost:5041
+@KK.Agent.WebAPI_HostAddress = http://localhost:7084
 
 ###
 POST {{KK.Agent.WebAPI_HostAddress}}/chat/stream
@@ -7,7 +7,7 @@ Content-Type: application/json
 
 {
     "sessionId": "",
-    "message": "Hello World!"
+    "message": "Where does Luke Skywalker come from? Tell me about his home planet"
 }
 
 ###
