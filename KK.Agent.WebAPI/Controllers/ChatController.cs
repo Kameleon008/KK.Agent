@@ -1,4 +1,6 @@
+using KK.Agent.Library.Agents;
 using KK.Agent.WebAPI.Agents;
+using KK.Agent.WebAPI.Tools;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KK.Agent.WebAPI.Controllers
@@ -15,19 +17,33 @@ namespace KK.Agent.WebAPI.Controllers
 
         [HttpPost]
         [Route("stream")]
-        public async Task StreamChat([FromBody] ChatRequest request, OrchestratorAgent orchestrator, CancellationToken ct)
+        public async Task StreamChat([FromBody] ChatRequest request, OrchestratorAgent orchestrator, AgentLogger logger, OrchestratorTools tools, CancellationToken ct)
         {
+            //orchestrator.AddToolInstance(tools);
+            orchestrator.AddToolInstance(tools);
+
             Response.ContentType = "text/event-stream";
             Response.Headers.Add("Cache-Control", "no-cache");
             Response.Headers.Add("Connection", "keep-alive");
 
-            await foreach (var chunk in orchestrator.RunStreamAsync(request.Message).WithCancellation(ct))
+            var task = orchestrator.RunWithLoggerAsync(request.Message);
+
+            _ = Task.Run(async () =>
             {
-                if (string.IsNullOrEmpty(chunk) is false)
+                try
                 {
-                    await Response.WriteAsync($"data: {chunk}\n\n", ct);
-                    await Response.Body.FlushAsync(ct); 
+                    await task;
                 }
+                finally
+                {
+                    logger.Complete();
+                }
+            }, ct);
+
+            await foreach (var log in logger.GetLogsAsync(HttpContext.RequestAborted))
+            {
+                await Response.WriteAsync($"data: {log}\n\n");
+                await Response.Body.FlushAsync();
             }
         }
     }

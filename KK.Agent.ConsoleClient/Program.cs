@@ -1,3 +1,4 @@
+using KK.Agent.Library.Agents;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Configuration;
 using KK.Agent.Library.Configuration.Models;
@@ -12,8 +13,9 @@ public static class Program
     {
         ConfigService.Load();
         var config = ConfigService.Get<ConfigRoot>();
+        var logger = new AgentLogger();
 
-        var orchestratorAgent = new OrchestratorAgent(new OpenApiClient(config.Provider));
+        var orchestratorAgent = new OrchestratorAgent(new OpenApiClient(config.Provider), logger);
         orchestratorAgent.AddToolFromType<OrchestratorTools>();
 
 

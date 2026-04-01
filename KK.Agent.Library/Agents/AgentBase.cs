@@ -16,12 +16,15 @@ namespace KK.Agent.Library.Agents
         private readonly List<ToolDefinition> _toolDefinitions = [];
         private readonly Dictionary<string, Func<string, Task<string>>> _tools = new();
         private readonly List<IFinishReasonHandler> _handlers = [];
-        private string agentId = Guid.NewGuid().ToString();
+        private readonly AgentLogger _logger;
+
+        protected virtual string AgentId { get; set; } = Guid.NewGuid().ToString();
 
         protected virtual string SystemPrompt { get; set; } = "You are helpful AI assistant";
 
-        protected AgentBase(OpenApiClient provider)
+        protected AgentBase(OpenApiClient provider, AgentLogger logger)
         {
+            this._logger = logger;
             this._provider = provider;
             this.InitializeHandlers();
         }
@@ -131,13 +134,23 @@ namespace KK.Agent.Library.Agents
                         continue;
                     }
 
-                    fullContent.Append(choice.Delta.ReasoningContent);
+                    if (string.IsNullOrEmpty(choice.Delta.ReasoningContent) is false)
+                    {
+                        fullContent.Append(choice.Delta.ReasoningContent);
 
-                    yield return choice.Delta.ReasoningContent;
+                        await _logger.PublishAsync(AgentId, choice.Delta.ReasoningContent);
 
-                    fullContent.Append(choice.Delta.Content);
+                        yield return choice.Delta.ReasoningContent;
+                    }
 
-                    yield return choice.Delta.Content;
+                    if (string.IsNullOrEmpty(choice.Delta.Content) is false)
+                    {
+                        fullContent.Append(choice.Delta.Content);
+
+                        await _logger.PublishAsync(AgentId, choice.Delta.Content);
+
+                        yield return choice.Delta.Content;
+                    }
 
                     UpdateChatCompletionsResponseFromChunk(ref synthesizedResponse, chunk);
                 }
@@ -160,6 +173,73 @@ namespace KK.Agent.Library.Agents
                 yield break;
             }
         }
+
+        public async Task<string> RunWithLoggerAsync(string prompt)
+        {
+            this._history.Clear();
+            this._history.AddSystemMessage(SystemPrompt);
+            this._history.AddUserMessage(prompt);
+
+            foreach (var _ in Enumerable.Range(0, 5))
+            {
+                ChatCompletionsResponse? synthesizedResponse = null;
+
+                var request = new ChatCompletionsRequestBuilder()
+                    .SetModel(_provider.Model)
+                    .SetMessages(_history)
+                    .SetTools(_toolDefinitions)
+                    .SetStream(true)
+                    .Build();
+
+                var fullContent = new StringBuilder();
+
+                await foreach (var chunk in _provider.GetChatCompletionsStreamAsync(request))
+                {
+                    var choice = chunk.Choices?.FirstOrDefault();
+
+                    if (choice?.Delta == null)
+                    {
+                        continue;
+                    }
+
+                    if (string.IsNullOrEmpty(choice.Delta.ReasoningContent) is false)
+                    {
+                        fullContent.Append(choice.Delta.ReasoningContent);
+
+                        await _logger.PublishAsync(AgentId, choice.Delta.ReasoningContent);
+                    }
+
+                    if (string.IsNullOrEmpty(choice.Delta.Content) is false)
+                    {
+                        fullContent.Append(choice.Delta.Content);
+
+                        await _logger.PublishAsync(AgentId, choice.Delta.Content);
+                    }
+
+                    UpdateChatCompletionsResponseFromChunk(ref synthesizedResponse, chunk);
+                }
+
+                _history.AddMessage(synthesizedResponse!.Choices.Single());
+
+                var result = await _handlers
+                    .Single(h => h.Handles(synthesizedResponse.Choices.Single().FinishReason))
+                    .HandleAsync(synthesizedResponse.Choices.Single(), _history);
+
+                if (result == null) continue;
+
+                var wasStreamingContent = fullContent.Length > 0;
+
+                if (!wasStreamingContent && !string.IsNullOrEmpty(result))
+                {
+                    return result;
+                }
+
+                break;
+            }
+
+            return "Iteration limit reached without final answer.";
+        }
+
 
         private void RegisterTools(object instance)
         {
