@@ -16,6 +16,7 @@ namespace KK.Agent.Library.Agents
         private readonly List<ToolDefinition> _toolDefinitions = [];
         private readonly Dictionary<string, Func<string, Task<string>>> _tools = new();
         private readonly List<IFinishReasonHandler> _handlers = [];
+        private string agentId = Guid.NewGuid().ToString();
 
         protected virtual string SystemPrompt { get; set; } = "You are helpful AI assistant";
 
@@ -138,7 +139,7 @@ namespace KK.Agent.Library.Agents
 
                     yield return choice.Delta.Content;
 
-                    UpdateSynthesizedResponse(ref synthesizedResponse, chunk);
+                    UpdateChatCompletionsResponseFromChunk(ref synthesizedResponse, chunk);
                 }
 
                 _history.AddMessage(synthesizedResponse!.Choices.Single());
@@ -170,16 +171,16 @@ namespace KK.Agent.Library.Agents
         }
 
 
-        private static void UpdateSynthesizedResponse(ref ChatCompletionsResponse? synthesized, ChatCompletionsChunk chunk)
+        private static void UpdateChatCompletionsResponseFromChunk(ref ChatCompletionsResponse? response, ChatCompletionsChunk chunk)
         {
-            synthesized ??= new ChatCompletionsResponse
+            response ??= new ChatCompletionsResponse
             {
                 Id = chunk.Id,
                 Choices = [new ChatCompletionChoice { Message = new ChatCompletionMessage { Content = "" } }]
             };
 
             var choice = chunk.Choices?.FirstOrDefault();
-            var message = synthesized.Choices?.FirstOrDefault()?.Message;
+            var message = response.Choices?.FirstOrDefault()?.Message;
 
             if (choice == null || message == null)
             {
@@ -230,7 +231,7 @@ namespace KK.Agent.Library.Agents
 
             if (!string.IsNullOrEmpty(choice.FinishReason))
             {
-                synthesized.Choices?.Single().FinishReason = choice.FinishReason;
+                response.Choices?.Single().FinishReason = choice.FinishReason;
             }
         }
 

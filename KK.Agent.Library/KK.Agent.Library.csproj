@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <Folder Include="Agents\Tools\" />
+    <Folder Include="Models\" />
   </ItemGroup>
 
 </Project>

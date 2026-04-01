@@ -1,6 +1,7 @@
 @KK.Agent.WebAPI_HostAddress = http://localhost:5041
 
-POST {{KK.Agent.WebAPI_HostAddress}}/chat
+###
+POST {{KK.Agent.WebAPI_HostAddress}}/chat/stream
 Accept: application/json
 Content-Type: application/json
 
@@ -10,3 +11,11 @@ Content-Type: application/json
 }
 
 ###
+POST {{KK.Agent.WebAPI_HostAddress}}/chat
+Accept: application/json
+Content-Type: application/json
+
+{
+    "sessionId": "",
+    "message": "Hello World!"
+}
