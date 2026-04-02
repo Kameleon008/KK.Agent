@@ -2,6 +2,7 @@ using KK.Agent.Library.Agents;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Configuration.Models;
 using KK.Agent.WebAPI.Agents;
+using KK.Agent.WebAPI.Extensions;
 using KK.Agent.WebAPI.Tools;
 
 namespace KK.Agent.WebAPI;
@@ -24,6 +25,18 @@ public static class Program
             return config;
         });
 
+        builder.Services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+            {
+                policy.WithOrigins("http://localhost:3000")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+        });
+
+
         builder.Services.AddSingleton<OrchestratorTools>();
         builder.Services.AddTransient<OpenApiClient>();
         builder.Services.AddSingleton<AgentLogger>();
@@ -37,10 +50,9 @@ public static class Program
             app.MapOpenApi();
         }
 
+        app.UseContentSecurityPolicy();
         app.UseHttpsRedirection();
-
         app.UseAuthorization();
-
         app.MapControllers();
 
         app.Run();

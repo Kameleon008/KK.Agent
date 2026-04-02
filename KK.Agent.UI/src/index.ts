@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, session, BrowserWindow } from 'electron';
 
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
@@ -13,21 +13,37 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+
 const createWindow = (): void => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     height: 600,
-    width: 800,
+    width: 1200,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+      webSecurity: false, // Disable web security to allow loading resources from different origins
     },
   });
 
-  // and load the index.html of the app.
-   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "default-src 'self' data:; " +
+          "connect-src 'self' https://localhost:7084 http://localhost:3000 ws: wss:; " + // dodaj http dla 3000
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+          "style-src 'self' 'unsafe-inline';"
+        ]
+      }
+    });
+  });
 
-   // Hide the menu bar
-   mainWindow.setMenuBarVisibility(false);
+  // and load the index.html of the app.
+  mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+
+  // Hide the menu bar
+  mainWindow.setMenuBarVisibility(false);
 
 
   // Open the DevTools.

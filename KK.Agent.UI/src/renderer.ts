@@ -11,7 +11,7 @@ const sendBtn = document.getElementById('sendBtn') as HTMLButtonElement;
 const statusDiv = document.getElementById('status') as HTMLElement;
 
 // Add a message to the chat
-function addMessage(agentId: string, text: string, isSystem: boolean = false) {
+function addMessage(agentId: string, text: string, isSystem = false) {
   const messageDiv = document.createElement('div');
   messageDiv.className = `message ${isSystem ? 'system' : 'agent'}`;
   
@@ -79,42 +79,54 @@ async function sendMessage() {
 }
 
 // Handle streaming response
-async function handleStream(body: ReadableStream<Uint8Array>) {
+async function handleStream(body: ReadableStream<Uint8Array<ArrayBuffer>>) {
   const reader = body.getReader();
   const decoder = new TextDecoder('utf-8');
+  let buffer = ''; // Accumulate partial data here
   
   statusDiv.textContent = 'Receiving stream...';
   
   try {
-    while (true) {
-      const { done, value } = await reader.read();
+    let done = false;
+    while (!done) {
+      const result = await reader.read();
+      done = result.done;
+      const value = result.value;
+      if (done) break;
       
-      if (done) {
-        break;
-      }
+      // Append new data to the buffer
+      buffer += decoder.decode(value, { stream: true });
       
-      const chunk = decoder.decode(value, { stream: true });
+      // Process the buffer line by line
+      const lines = buffer.split('\n');
       
-      // Process each line in the chunk
-      const lines = chunk.split('\n');
+      // Keep the last (potentially incomplete) line in the buffer
+      buffer = lines.pop() || ''; 
       
       for (const line of lines) {
         const trimmedLine = line.trim();
         
-        if (!trimmedLine || !trimmedLine.startsWith('{')) {
-          continue;
+        // SSE standard: lines usually start with "data: "
+        // If your server just sends raw JSON strings per line, remove the .replace
+        let content = trimmedLine;
+        if (content.startsWith('data: ')) {
+          content = content.replace('data: ', '');
         }
-        
+
+        if (!content || content === '[DONE]') continue; 
+
         try {
-          const data = JSON.parse(trimmedLine);
+          const data = JSON.parse(content);
           
           if (data.agentId && data.message) {
+            // TIP: You might want to append text to the same message bubble 
+            // if it's a "token" stream, rather than creating a new bubble for every chunk.
             addMessage(data.agentId, data.message);
           } else {
             addMessage('System', `Received: ${JSON.stringify(data)}`, true);
           }
         } catch (e) {
-          console.error('Failed to parse JSON:', trimmedLine);
+          console.error('Failed to parse JSON segment:', content);
         }
       }
     }
