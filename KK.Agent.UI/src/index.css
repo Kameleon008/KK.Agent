@@ -117,11 +117,11 @@ body {
 }
 
 .message.agent .reasoning {
-  background-color: #3a2a2a;
+  background-color: #323232;
   padding: 8px 12px;
   margin-top: 12px;
   margin-bottom: 20px;
-  color: #ffb3b3;
+  color: #b0b0b0;
   font-size: 0.9em;
   line-height: 1.5;
   border-radius: 4px;
@@ -132,7 +132,6 @@ body {
 .message.agent > span + span {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid #444;
 }
 
 .message.system {
