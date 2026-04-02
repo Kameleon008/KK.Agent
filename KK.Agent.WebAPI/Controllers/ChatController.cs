@@ -17,33 +17,43 @@ namespace KK.Agent.WebAPI.Controllers
 
         [HttpPost]
         [Route("stream")]
-        public async Task StreamChat([FromBody] ChatRequest request, OrchestratorAgent orchestrator, AgentLogger logger, OrchestratorTools tools, CancellationToken ct)
+        public async Task StreamChat([FromBody] ChatRequest request, OrchestratorAgent orchestrator, AgentLogger logger, OrchestratorTools tools)
         {
-            //orchestrator.AddToolInstance(tools);
             orchestrator.AddToolInstance(tools);
 
             Response.ContentType = "text/event-stream";
-            Response.Headers.Add("Cache-Control", "no-cache");
-            Response.Headers.Add("Connection", "keep-alive");
+            Response.Headers.Append("Cache-Control", "no-cache");
 
-            var task = orchestrator.RunWithLoggerAsync(request.Message);
 
-            _ = Task.Run(async () =>
+
+            var disconnectToken = HttpContext.RequestAborted;
+
+            var orchestratorTask = Task.Run(async () =>
             {
                 try
                 {
-                    await task;
+                    await orchestrator.RunWithLoggerAsync(request.Message);
                 }
                 finally
                 {
                     logger.Complete();
                 }
-            }, ct);
+            }, disconnectToken);
 
-            await foreach (var log in logger.GetLogsAsync(HttpContext.RequestAborted))
+            try
             {
-                await Response.WriteAsync($"data: {log}\n\n");
-                await Response.Body.FlushAsync();
+                await foreach (var log in logger.GetLogsAsync(disconnectToken))
+                {
+                    await Response.WriteAsync($"data: {log}\n\n", disconnectToken);
+                    await Response.Body.FlushAsync(disconnectToken);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            finally
+            {
+                await orchestratorTask;
             }
         }
     }

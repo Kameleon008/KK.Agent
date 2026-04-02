@@ -6,27 +6,38 @@ namespace KK.Agent.Library.Agents
 {
     public class AgentLogger
     {
-        private readonly Channel<AgentLoggerModel> _channel = Channel.CreateUnbounded<AgentLoggerModel>();
+        private Channel<AgentLoggerModel> _channel = Channel.CreateUnbounded<AgentLoggerModel>();
 
         public async Task PublishAsync(string agentId, string message)
         {
             var log = $"[{agentId}]: {message}";
             Console.WriteLine(log);
-            await _channel.Writer.WriteAsync(new AgentLoggerModel
+
+            try
             {
-                AgentId = agentId,
-                Message = message
-            });
+                await _channel.Writer.WriteAsync(new AgentLoggerModel
+                {
+                    AgentId = agentId,
+                    Message = message
+                });
+            }
+            catch (ChannelClosedException e)
+            {
+                this._channel = Channel.CreateUnbounded<AgentLoggerModel>();
+                await _channel.Writer.WriteAsync(new AgentLoggerModel
+                {
+                    AgentId = agentId,
+                    Message = message
+                });
+            }
+
         }
 
         public async IAsyncEnumerable<string> GetLogsAsync([EnumeratorCancellation] CancellationToken ct)
         {
-            while (await _channel.Reader.WaitToReadAsync(ct))
+            await foreach (var log in _channel.Reader.ReadAllAsync(ct))
             {
-                while (_channel.Reader.TryRead(out var log))
-                {
-                    yield return JsonConvert.SerializeObject(log);
-                }
+                yield return JsonConvert.SerializeObject(log);
             }
         }
 
