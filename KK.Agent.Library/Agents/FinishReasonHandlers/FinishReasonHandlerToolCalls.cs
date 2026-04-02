@@ -2,7 +2,7 @@ using KK.Agent.Library.Clients.OpenApi.V1;
 
 namespace KK.Agent.Library.Agents.FinishReasonHandlers
 {
-    public class FinishReasonHandlerToolCalls(Dictionary<string, Func<string, Task<string>>> tools) : IFinishReasonHandler
+    public class FinishReasonHandlerToolCalls(Dictionary<string, Func<string, Task<string>>> tools, AgentLogger logger) : IFinishReasonHandler
     {
         public bool Handles(string finishReason) => finishReason == "tool_calls";
 
@@ -10,7 +10,7 @@ namespace KK.Agent.Library.Agents.FinishReasonHandlers
         {
             foreach (var toolCall in choice.Message.ToolCalls!)
             {
-                Console.WriteLine($"[Agent]: Calls tool: {toolCall.Function!.Name}...");
+                await logger.PublishAsync("System", $"Calls tool: {toolCall.Function!.Name}...", string.Empty);
 
                 var result = await tools[toolCall.Function!.Name](toolCall.Function.Arguments);
 

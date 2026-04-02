@@ -33,7 +33,7 @@ namespace KK.Agent.Library.Agents
         {
             _handlers.Add(new FinishReasonHandlerStop());
             _handlers.Add(new FinishReasonHandlerLength());
-            _handlers.Add(new FinishReasonHandlerToolCalls(_tools));
+            _handlers.Add(new FinishReasonHandlerToolCalls(_tools, _logger));
             _handlers.Add(new FinishReasonHandlerContentFilter());
         }
 

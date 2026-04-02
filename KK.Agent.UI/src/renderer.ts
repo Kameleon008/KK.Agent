@@ -3,6 +3,19 @@
  */
 
 import './index.css';
+import { marked } from 'marked';
+
+// Configure marked for safety and styling (use sync mode for streaming)
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+  async: false, // Force synchronous parsing for live rendering
+});
+
+// Helper function to parse markdown synchronously
+const parseMarkdown = (text: string): string => {
+  return marked.parse(text, { async: false }) as string;
+};
 
 // DOM Elements
 const messagesContainer = document.getElementById('messages') as HTMLElement;
@@ -16,33 +29,85 @@ interface MessageSection {
   span: HTMLSpanElement;
 }
 
+// Map of AgentId to accent colors (default to yellow/gold)
+const agentColors: Record<string, string> = {};
+
 let currentAgentId: string | null = null;
 let currentMessageDiv: HTMLDivElement | null = null;
 let currentSections: MessageSection[] = [];
 
+// Get or generate color for an agent
+function getAgentColor(agentId: string): string {
+  if (!agentColors[agentId]) {
+    // Generate a random vibrant color for new agents
+    const colors = [
+      '#ffd700', // gold
+      '#ff6b6b', // red
+      '#4ecdc4', // teal
+      '#95e1d3', // mint
+      '#f38181', // pink
+      '#aa96da', // purple
+      '#fcbad3', // light pink
+      '#a8e6cf', // green
+      '#ff8b94', // coral
+      '#74b9ff', // blue
+    ];
+    agentColors[agentId] = colors[Math.floor(Math.random() * colors.length)];
+  }
+  return agentColors[agentId];
+}
+
+// Apply color styles to message element
+function applyAgentColor(messageDiv: HTMLDivElement, agentId: string) {
+  const color = getAgentColor(agentId);
+  (messageDiv as HTMLElement).style.setProperty('--accent-color', color);
+  
+  // Also set inline style for header (fallback if CSS variable not supported)
+  const headerSpan = messageDiv.querySelector('.header');
+  if (headerSpan) {
+    (headerSpan as HTMLElement).style.color = color;
+  }
+}
+
 // Add a new message to the chat (for user/system messages)
 function addNewMessage(agentId: string, text: string, isSystem = false) {
   const messageDiv = document.createElement('div');
-  messageDiv.className = `message ${isSystem ? 'system' : 'agent'}`;
+  messageDiv.className = `message ${isSystem ? 'system' : 'user'}`;
   
   if (isSystem) {
     messageDiv.textContent = text;
   } else {
-    const agentSpan = document.createElement('span');
-    agentSpan.style.color = '#4ecca3';
-    agentSpan.style.fontWeight = 'bold';
-    agentSpan.textContent = `[${agentId}] `;
+    // Header span with name
+    const headerSpan = document.createElement('span');
+    headerSpan.className = 'header';
+    headerSpan.textContent = `[${agentId}]`;
     
-    const contentSpan = document.createElement('span');
-    contentSpan.textContent = text.replace(`[${agentId}] `, '');
-    
-    messageDiv.appendChild(agentSpan);
-    messageDiv.appendChild(contentSpan);
+    // Content span - only create if content exists after removing agent prefix
+    const contentText = text.replace(`[${agentId}] `, '');
+    if (contentText) {
+      const contentSpan = document.createElement('span');
+      contentSpan.className = 'content';
+      contentSpan.innerHTML = parseMarkdown(contentText);
+      
+      messageDiv.appendChild(headerSpan);
+      messageDiv.appendChild(contentSpan);
+    } else {
+      messageDiv.appendChild(headerSpan);
+    }
   }
   
   messagesContainer.appendChild(messageDiv);
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
+
+// Store pending markdown content for agent messages
+interface PendingContent {
+  type: 'content' | 'reasoning';
+  span: HTMLSpanElement;
+  rawText: string;
+}
+
+let pendingContents: PendingContent[] = [];
 
 // Append text to current agent message or create new one
 function appendToAgentMessage(agentId: string, text: string, isReasoning = false) {
@@ -51,22 +116,25 @@ function appendToAgentMessage(agentId: string, text: string, isReasoning = false
     // Save previous message if exists
     if (currentMessageDiv) {
       messagesContainer.appendChild(currentMessageDiv);
+      currentMessageDiv = null;
     }
     
     currentAgentId = agentId;
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message agent';
     
-    const agentSpan = document.createElement('span');
-    agentSpan.style.color = '#4ecca3';
-    agentSpan.style.fontWeight = 'bold';
-    agentSpan.textContent = `[${agentId}] `;
+    // Header span with name
+    const headerSpan = document.createElement('span');
+    headerSpan.className = 'header';
+    headerSpan.textContent = `[${agentId}]`;
     
-    messageDiv.appendChild(agentSpan);
+    messageDiv.appendChild(headerSpan);
     
     messagesContainer.appendChild(messageDiv);
+    applyAgentColor(messageDiv, agentId);
     currentMessageDiv = messageDiv;
     currentSections = [];
+    pendingContents = [];
   }
   
   // Find existing section of this type or create new one
@@ -79,26 +147,50 @@ function appendToAgentMessage(agentId: string, text: string, isReasoning = false
     // Create new section
     const span = document.createElement('span');
     span.className = isReasoning ? 'reasoning' : 'content';
-    span.textContent = ''; // Start empty for streaming
     
     currentMessageDiv.appendChild(span);
     
     section = { type: isReasoning ? 'reasoning' : 'content', span };
     currentSections.push(section);
+    
+    // Track pending content for markdown rendering
+    const rawText = text || '';
+    pendingContents.push({ type: isReasoning ? 'reasoning' : 'content', span, rawText });
+  } else {
+    // Append text to existing section's raw text (not HTML yet)
+    const pendingContent = pendingContents.find(pc => pc.type === section!.type);
+    if (pendingContent) {
+      pendingContent.rawText += text;
+    }
   }
   
-  // Append text to the appropriate span
-  if (section) {
-    section.span.textContent += text;
+  // Render markdown live for the current section type
+  const pendingContent = pendingContents.find(pc => pc.type === section!.type);
+  if (pendingContent) {
+    section.span.innerHTML = parseMarkdown(pendingContent.rawText);
   }
   
   // Scroll to bottom
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
+// Render markdown for all pending content in a message (for finalization)
+async function renderPendingMarkdown() {
+  // When async is disabled, parse returns string directly, but TS still thinks it's Promise
+  const htmls = await Promise.all(pendingContents.map(pending => marked.parse(pending.rawText)));
+  
+  for (let i = 0; i < pendingContents.length; i++) {
+    pendingContents[i].span.innerHTML = htmls[i] as string;
+  }
+  pendingContents = [];
+}
+
 // Finalize and clear current agent message tracking
-function finalizeAgentMessage() {
+async function finalizeAgentMessage() {
   if (currentMessageDiv) {
+    // Render markdown for all pending content before finalizing
+    await renderPendingMarkdown();
+    
     messagesContainer.appendChild(currentMessageDiv);
     currentMessageDiv = null;
     currentSections = [];

@@ -105,20 +105,34 @@ body {
   }
 }
 
+.message .header {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.9em;
+}
+
 .message.agent {
   background-color: #2a2a2a;
-  border-left: 4px solid #ffd700;
+  border-left: 1rem solid var(--accent-color, #ffd700);
 }
 
 .message.agent .content {
   color: #e0e0e0;
   line-height: 1.6;
   padding: 8px 12px;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 .message.agent .reasoning {
   background-color: #323232;
   padding: 8px 12px;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
   margin-top: 12px;
   margin-bottom: 20px;
   color: #b0b0b0;
@@ -129,9 +143,80 @@ body {
 }
 
 /* Add visual separator between sections */
-.message.agent > span + span {
+.message.agent>span+span {
   margin-top: 8px;
   padding-top: 8px;
+}
+
+.message.user {
+  background-color: #2a2a2a;
+  border-right: 1rem solid var(--accent-color, #3498db);
+}
+
+.message.user .content {
+  color: #e0e0e0;
+  line-height: 1.6;
+  padding: 8px 12px;
+}
+
+/* Markdown styling for content spans */
+.message .content :is(h1, h2, h3, h4, h5, h6) {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  font-weight: bold;
+}
+
+.message .content :is(p, ul, ol, blockquote) {
+  margin-bottom: 0.75em;
+}
+
+.message .content a {
+  color: var(--accent-color, #3498db);
+  text-decoration: underline;
+}
+
+.message .content code {
+  background-color: #1a1a1a;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+}
+
+.message .content pre {
+  background-color: #1a1a1a;
+  padding: 12px;
+  border-radius: 5px;
+  overflow-x: auto;
+  margin-bottom: 0.75em;
+}
+
+.message .content pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+.message .content blockquote {
+  border-left: 3px solid var(--accent-color, #3498db);
+  padding-left: 12px;
+  margin-left: 0;
+  color: #b0b0b0;
+}
+
+.message .content ul,
+.message .content ol {
+  padding-left: 20px;
+  margin-bottom: 0.75em;
+}
+
+.message .content li {
+  margin-bottom: 0.25em;
+}
+
+.message .content hr {
+  border: none;
+  border-top: 1px solid #333;
+  margin: 1em 0;
 }
 
 .message.system {
