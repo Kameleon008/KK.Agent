@@ -1,3 +1,4 @@
+using KK.Agent.Library;
 using KK.Agent.Library.Agents;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Configuration.Models;
@@ -35,6 +36,8 @@ public static class Program
             });
         });
 
+
+        builder.Services.AddSingleton<AgentHistory>();
 
         builder.Services.AddScoped<AgentLogger>();
         builder.Services.AddScoped<OpenApiClient>();

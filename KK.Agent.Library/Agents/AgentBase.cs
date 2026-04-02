@@ -12,7 +12,7 @@ namespace KK.Agent.Library.Agents
     public abstract class AgentBase
     {
         private readonly OpenApiClient _provider;
-        private readonly ChatHistory _history = [];
+        private readonly AgentHistory _history;
         private readonly List<ToolDefinition> _toolDefinitions = [];
         private readonly Dictionary<string, Func<string, Task<string>>> _tools = new();
         private readonly List<IFinishReasonHandler> _handlers = [];
@@ -22,10 +22,11 @@ namespace KK.Agent.Library.Agents
 
         protected virtual string SystemPrompt { get; set; } = "You are helpful AI assistant";
 
-        protected AgentBase(OpenApiClient provider, AgentLogger logger)
+        protected AgentBase(OpenApiClient provider, AgentLogger logger, AgentHistory history)
         {
             this._logger = logger;
             this._provider = provider;
+            this._history = history;
             this.InitializeHandlers();
         }
 
@@ -48,28 +49,28 @@ namespace KK.Agent.Library.Agents
             RegisterTools(toolInstance);
         }
 
-        public async Task<string> RunAsync(string prompt)
+        public async Task<string> RunAsync(string prompt, string sessionId = "")
         {
-            this._history.Clear();
-            this._history.AddSystemMessage(SystemPrompt);
-            this._history.AddUserMessage(prompt);
+            var history = _history.GetChatHistory(sessionId);
+            history.AddSystemMessage(SystemPrompt);
+            history.AddUserMessage(prompt);
 
             foreach (var _ in Enumerable.Range(0, 5))
             {
                 var request = new ChatCompletionsRequestBuilder()
                     .SetModel(_provider.Model)
-                    .SetMessages(_history)
+                    .SetMessages(history)
                     .SetTools(_toolDefinitions)
                     .Build();
 
                 var response = await _provider.GetChatCompletionsAsync(request);
                 var choice = response.Choices.First();
 
-                _history.AddMessage(choice);
+                history.AddMessage(choice);
 
                 var result = await _handlers
                     .Single(handler => handler.Handles(choice.FinishReason))
-                    .HandleAsync(choice, _history);
+                    .HandleAsync(choice, history);
 
                 if (result == null)
                 {
@@ -82,14 +83,15 @@ namespace KK.Agent.Library.Agents
             return "Iteration limit reached without final answer.";
         }
 
-        public async Task<T?> RunAsync<T>(string prompt)
+        public async Task<T?> RunAsync<T>(string prompt, string sessionId = "")
             where T : class, new()
         {
-            await this.RunAsync(prompt);
+            var history = _history.GetChatHistory(sessionId);
+            await this.RunAsync(prompt, sessionId);
 
             var request = new ChatCompletionsRequestBuilder()
                 .SetModel(_provider.Model)
-                .SetMessages(_history)
+                .SetMessages(history)
                 .SetTools(_toolDefinitions)
                 .SetJsonResponseFormat<T>()
                 .Build();
@@ -97,20 +99,20 @@ namespace KK.Agent.Library.Agents
             var response = await _provider.GetChatCompletionsAsync(request);
             var choice = response.Choices.First();
 
-            _history.AddMessage(choice);
+            history.AddMessage(choice);
 
             var result = await _handlers
                 .Single(handler => handler.Handles(choice.FinishReason))
-                .HandleAsync(choice, _history);
+                .HandleAsync(choice, history);
 
             return result == null ? null : JsonConvert.DeserializeObject<T>(result);
         }
 
-        public async IAsyncEnumerable<string> RunStreamAsync(string prompt)
+        public async Task<string> RunStreamAsync(string prompt, string sessionId = "")
         {
-            this._history.Clear();
-            this._history.AddSystemMessage(SystemPrompt);
-            this._history.AddUserMessage(prompt);
+            var history = _history.GetChatHistory(sessionId);
+            history.AddSystemMessage(SystemPrompt);
+            history.AddUserMessage(prompt);
 
             foreach (var _ in Enumerable.Range(0, 5))
             {
@@ -118,7 +120,7 @@ namespace KK.Agent.Library.Agents
 
                 var request = new ChatCompletionsRequestBuilder()
                     .SetModel(_provider.Model)
-                    .SetMessages(_history)
+                    .SetMessages(history)
                     .SetTools(_toolDefinitions)
                     .SetStream(true)
                     .Build();
@@ -134,97 +136,27 @@ namespace KK.Agent.Library.Agents
                         continue;
                     }
 
-                    if (string.IsNullOrEmpty(choice.Delta.ReasoningContent) is false)
-                    {
-                        fullContent.Append(choice.Delta.ReasoningContent);
-
-                        yield return choice.Delta.ReasoningContent;
-                    }
-
-                    if (string.IsNullOrEmpty(choice.Delta.Content) is false)
-                    {
-                        fullContent.Append(choice.Delta.Content);
-
-                        yield return choice.Delta.Content;
-                    }
-
-                    UpdateChatCompletionsResponseFromChunk(ref synthesizedResponse, chunk);
-                }
-
-                _history.AddMessage(synthesizedResponse!.Choices.Single());
-
-                var result = await _handlers
-                    .Single(h => h.Handles(synthesizedResponse.Choices.Single().FinishReason))
-                    .HandleAsync(synthesizedResponse.Choices.Single(), _history);
-
-                if (result == null) continue;
-
-                var wasStreamingContent = fullContent.Length > 0;
-
-                if (!wasStreamingContent && !string.IsNullOrEmpty(result))
-                {
-                    yield return result;
-                }
-
-                yield break;
-            }
-        }
-
-        public async Task<string> RunWithLoggerAsync(string prompt)
-        {
-            this._history.Clear();
-            this._history.AddSystemMessage(SystemPrompt);
-            this._history.AddUserMessage(prompt);
-
-            foreach (var _ in Enumerable.Range(0, 5))
-            {
-                ChatCompletionsResponse? synthesizedResponse = null;
-
-                var request = new ChatCompletionsRequestBuilder()
-                    .SetModel(_provider.Model)
-                    .SetMessages(_history)
-                    .SetTools(_toolDefinitions)
-                    .SetStream(true)
-                    .Build();
-
-                var fullContent = new StringBuilder();
-
-                await foreach (var chunk in _provider.GetChatCompletionsStreamAsync(request))
-                {
-                    var choice = chunk.Choices?.FirstOrDefault();
-
-                    if (choice?.Delta == null)
-                    {
-                        continue;
-                    }
 
                     fullContent.Append(choice.Delta.ReasoningContent);
                     fullContent.Append(choice.Delta.Content);
 
                     await _logger.PublishAsync(
                         agentId: AgentId,
-                        reasoning: choice.Delta.ReasoningContent ?? string.Empty,
-                        content: choice.Delta.Content ?? string.Empty);
+                        reasoning: choice.Delta.ReasoningContent,
+                        content: choice.Delta.Content);
 
                     UpdateChatCompletionsResponseFromChunk(ref synthesizedResponse, chunk);
                 }
 
-                _history.AddMessage(synthesizedResponse!.Choices.Single());
+                history.AddMessage(synthesizedResponse!.Choices.Single());
 
                 var result = await _handlers
                     .Single(h => h.Handles(synthesizedResponse.Choices.Single().FinishReason))
-                    .HandleAsync(synthesizedResponse.Choices.Single(), _history);
+                    .HandleAsync(synthesizedResponse.Choices.Single(), history);
 
                 if (result == null) continue;
 
-                var wasStreamingContent = fullContent.Length > 0;
-
-                if (!wasStreamingContent && !string.IsNullOrEmpty(result))
-                {
-                    return result;
-                }
-
-                break;
+                return result;
             }
 
             return "Iteration limit reached without final answer.";

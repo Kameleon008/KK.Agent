@@ -19,9 +19,16 @@ const parseMarkdown = (text: string): string => {
 
 // DOM Elements
 const messagesContainer = document.getElementById('messages') as HTMLElement;
-const messageInput = document.getElementById('messageInput') as HTMLInputElement;
+const messageInput = document.getElementById('messageInput') as HTMLTextAreaElement;
 const sendBtn = document.getElementById('sendBtn') as HTMLButtonElement;
 const statusDiv = document.getElementById('status') as HTMLElement;
+const promptDropdown = document.getElementById('promptDropdown') as HTMLDivElement;
+
+// Prompt autocomplete state
+let currentPromptIndex = 0;
+let availablePrompts: Array<{ name: string; filename: string }> = [];
+let filteredPrompts: Array<{ name: string; filename: string }> = [];
+let isInsertingPrompt = false;
 
 // Track all content sections for an agent message
 interface MessageSection {
@@ -39,18 +46,16 @@ let currentSections: MessageSection[] = [];
 // Get or generate color for an agent
 function getAgentColor(agentId: string): string {
   if (!agentColors[agentId]) {
-    // Generate a random vibrant color for new agents
+    // Generate a random vibrant color for new agents (dark theme compatible)
     const colors = [
-      '#ffd700', // gold
-      '#ff6b6b', // red
-      '#4ecdc4', // teal
-      '#95e1d3', // mint
-      '#f38181', // pink
-      '#aa96da', // purple
-      '#fcbad3', // light pink
-      '#a8e6cf', // green
-      '#ff8b94', // coral
-      '#74b9ff', // blue
+      'var(--accent-100)',
+      'var(--accent-200)',
+      'var(--accent-300)',
+      'var(--accent-400)',
+      'var(--accent-500)',
+      'var(--accent-600)',
+      'var(--accent-700)',
+      'var(--accent-800)',
     ];
     agentColors[agentId] = colors[Math.floor(Math.random() * colors.length)];
   }
@@ -61,12 +66,6 @@ function getAgentColor(agentId: string): string {
 function applyAgentColor(messageDiv: HTMLDivElement, agentId: string) {
   const color = getAgentColor(agentId);
   (messageDiv as HTMLElement).style.setProperty('--accent-color', color);
-  
-  // Also set inline style for header (fallback if CSS variable not supported)
-  const headerSpan = messageDiv.querySelector('.header');
-  if (headerSpan) {
-    (headerSpan as HTMLElement).style.color = color;
-  }
 }
 
 // Add a new message to the chat (for user/system messages)
@@ -217,7 +216,7 @@ async function sendMessage() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        sessionId: '',
+        sessionId: 'f0b1a6fb-a79c-4123-b5fa-1e1c0d1dc389',
         message: message,
       }),
     });
@@ -314,16 +313,207 @@ async function handleStream(body: ReadableStream<Uint8Array>) {
   }
 }
 
+function isPromptDropdownVisible(): boolean {
+  return promptDropdown.style.display === 'block';
+}
+
+function hidePromptDropdown() {
+  promptDropdown.style.display = 'none';
+  promptDropdown.innerHTML = '';
+  currentPromptIndex = 0;
+  filteredPrompts = [];
+}
+
+async function ensurePromptsLoaded(): Promise<void> {
+  if (!window.electronAPI) return;
+
+  // Always try to refresh; prompts folder contents can change.
+  const result = await window.electronAPI.readPromptsFolder();
+  if (result.error || !result.files) {
+    availablePrompts = [];
+    return;
+  }
+  availablePrompts = result.files;
+}
+
+function getActiveAtToken(text: string, cursorPos: number): { start: number; end: number; query: string } | null {
+  const left = text.slice(0, cursorPos);
+  const atIndex = left.lastIndexOf('@');
+  if (atIndex === -1) return null;
+
+  // Only treat as token if it's at start or preceded by whitespace
+  if (atIndex > 0 && !/\s/.test(left[atIndex - 1])) return null;
+
+  const query = left.slice(atIndex + 1);
+  // If there is whitespace inside the query, the token ended earlier
+  if (/\s/.test(query)) return null;
+
+  return { start: atIndex, end: cursorPos, query };
+}
+
+function applyFilter(query: string): Array<{ name: string; filename: string }> {
+  const q = query.trim().toLowerCase();
+  if (!q) return [...availablePrompts];
+  return availablePrompts.filter(p => p.name.toLowerCase().includes(q) || p.filename.toLowerCase().includes(q));
+}
+
+function renderPromptDropdown() {
+  // Render relative to input-container (which is position: relative)
+  promptDropdown.style.display = 'block';
+  promptDropdown.style.left = '0px';
+  promptDropdown.style.top = `${messageInput.offsetHeight + 6}px`;
+
+  if (filteredPrompts.length === 0) {
+    promptDropdown.innerHTML = `
+      <div class="prompt-dropdown-item" style="cursor: default; opacity: 0.8;">
+        <span class="prompt-dropdown-name">Brak dopasowań</span>
+      </div>
+    `;
+    return;
+  }
+
+  promptDropdown.innerHTML = filteredPrompts
+    .map((prompt, index) => `
+      <div class="prompt-dropdown-item ${index === currentPromptIndex ? 'active' : ''}" data-index="${index}">
+        <span class="prompt-dropdown-icon">📄</span>
+        <span class="prompt-dropdown-name">${prompt.name}</span>
+        <span class="prompt-dropdown-hint">Tab/Enter</span>
+      </div>
+    `)
+    .join('');
+
+  const items = promptDropdown.querySelectorAll('.prompt-dropdown-item');
+  items.forEach(item => {
+    item.addEventListener('click', () => {
+      const index = parseInt((item as HTMLElement).dataset.index || '0', 10);
+      const prompt = filteredPrompts[index];
+      if (prompt) void insertPrompt(prompt);
+    });
+  });
+}
+
+function updateDropdownHighlight() {
+  const items = promptDropdown.querySelectorAll('.prompt-dropdown-item');
+  items.forEach((item, index) => {
+    if (index === currentPromptIndex) {
+      (item as HTMLElement).classList.add('active');
+      (item as HTMLElement).scrollIntoView({ block: 'nearest' });
+    } else {
+      (item as HTMLElement).classList.remove('active');
+    }
+  });
+}
+
+async function updatePromptDropdownFromInput() {
+  const cursorPos = messageInput.selectionStart ?? messageInput.value.length;
+  const token = getActiveAtToken(messageInput.value, cursorPos);
+
+  if (!token) {
+    if (isPromptDropdownVisible()) hidePromptDropdown();
+    return;
+  }
+
+  // Token exists: `@<query>`
+  if (!window.electronAPI) return;
+  await ensurePromptsLoaded();
+
+  filteredPrompts = applyFilter(token.query);
+  currentPromptIndex = Math.min(currentPromptIndex, Math.max(filteredPrompts.length - 1, 0));
+
+  renderPromptDropdown();
+}
+
+async function insertPrompt(prompt: { name: string; filename: string }) {
+  if (!window.electronAPI) return;
+  if (isInsertingPrompt) return;
+  isInsertingPrompt = true;
+
+  const cursorPos = messageInput.selectionStart ?? messageInput.value.length;
+  const token = getActiveAtToken(messageInput.value, cursorPos);
+  if (!token) {
+    isInsertingPrompt = false;
+    return;
+  }
+
+  try {
+    const result = await window.electronAPI.readPromptFile(prompt.filename);
+    if (result.error || result.content == null) {
+      console.error('Error reading prompt:', result.error);
+      return;
+    }
+
+    // Wstawiamy *tylko* zawartość pliku (bez nazwy i bez code fence'ów)
+    const raw = result.content.replace(/\r\n/g, '\n');
+
+    const before = messageInput.value.slice(0, token.start);
+    const after = messageInput.value.slice(token.end);
+
+    // Delikatne formatowanie: jeśli przed @ nie ma odstępu/nowej linii, dodajemy \n
+    const needsLeadingNewline = before.length > 0 && !/[\s\n]$/.test(before);
+    const insertion = (needsLeadingNewline ? '\n' : '') + raw;
+
+    messageInput.value = before + insertion + after;
+
+    const newCursorPos = (before + insertion).length;
+    messageInput.setSelectionRange(newCursorPos, newCursorPos);
+
+    hidePromptDropdown();
+    messageInput.focus();
+  } finally {
+    isInsertingPrompt = false;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  // Add Enter key handler
-  messageInput.addEventListener('keypress', (event) => {
-    if (event.key === 'Enter') {
-      sendMessage();
+  // Keep dropdown in sync with user typing (also enables filtering)
+  messageInput.addEventListener('input', () => {
+    void updatePromptDropdownFromInput();
+  });
+
+  // Keyboard handling: navigation + accept + send
+  messageInput.addEventListener('keydown', (event) => {
+    if (isPromptDropdownVisible()) {
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        currentPromptIndex = Math.min(currentPromptIndex + 1, Math.max(filteredPrompts.length - 1, 0));
+        updateDropdownHighlight();
+        return;
+      }
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        currentPromptIndex = Math.max(currentPromptIndex - 1, 0);
+        updateDropdownHighlight();
+        return;
+      }
+      if (event.key === 'Tab' || event.key === 'Enter') {
+        event.preventDefault();
+        const prompt = filteredPrompts[currentPromptIndex];
+        if (prompt) void insertPrompt(prompt);
+        return;
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        hidePromptDropdown();
+        return;
+      }
+    }
+
+    // Normal send (only when dropdown isn't open)
+    // W textarea: Enter wysyła, Shift+Enter robi nową linię
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      void sendMessage();
     }
   });
 
-  // Add click handler for send button
   sendBtn.addEventListener('click', () => {
-    sendMessage();
+    void sendMessage();
+  });
+
+  // Hide dropdown when clicking outside
+  document.addEventListener('click', (event) => {
+    if (!promptDropdown.contains(event.target as Node) && event.target !== messageInput) {
+      hidePromptDropdown();
+    }
   });
 });

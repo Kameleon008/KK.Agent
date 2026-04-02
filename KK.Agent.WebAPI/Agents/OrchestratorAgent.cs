@@ -1,4 +1,5 @@
-﻿using KK.Agent.Library.Agents;
+﻿using KK.Agent.Library;
+using KK.Agent.Library.Agents;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.WebAPI.Tools;
 
@@ -8,13 +9,11 @@ namespace KK.Agent.WebAPI.Agents
     {
         protected override string SystemPrompt { get; set; } = File.ReadAllText($"./Agents/{nameof(OrchestratorAgent)}.md");
 
-        protected override string AgentId { get; set; } = "OrchestratorAgent";
+        protected override string AgentId { get; set; } = nameof(OrchestratorAgent);
 
-        public OrchestratorAgent(OpenApiClient provider, AgentLogger logger) : base(provider, logger)
+        public OrchestratorAgent(OpenApiClient provider, AgentLogger logger, AgentHistory history) : base(provider, logger, history)
         {
-            var orchestratorTools = new OrchestratorTools(logger);
-            this.AddToolInstance(orchestratorTools);
-
+            this.AddToolInstance(new OrchestratorTools(logger, history));
         }
     }
 }

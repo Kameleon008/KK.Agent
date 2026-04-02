@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Agents\LoreAgent.md">
+    <None Update="Agents\HttpAgent.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Agents\OrchestratorAgent.md">
