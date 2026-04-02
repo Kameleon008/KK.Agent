@@ -8,29 +8,16 @@ namespace KK.Agent.Library.Agents
     {
         private Channel<AgentLoggerModel> _channel = Channel.CreateUnbounded<AgentLoggerModel>();
 
-        public async Task PublishAsync(string agentId, string message)
+        public async Task PublishAsync(string agentId, string reasoning, string content)
         {
-            var log = $"[{agentId}]: {message}";
-            Console.WriteLine(log);
+            Console.WriteLine("[{0}]: REASONING: {1}, CONTENT: {2}", agentId, reasoning, content);
 
-            try
+            await _channel.Writer.WriteAsync(new AgentLoggerModel
             {
-                await _channel.Writer.WriteAsync(new AgentLoggerModel
-                {
-                    AgentId = agentId,
-                    Message = message
-                });
-            }
-            catch (ChannelClosedException e)
-            {
-                this._channel = Channel.CreateUnbounded<AgentLoggerModel>();
-                await _channel.Writer.WriteAsync(new AgentLoggerModel
-                {
-                    AgentId = agentId,
-                    Message = message
-                });
-            }
-
+                AgentId = agentId,
+                Reasoning = reasoning,
+                Content = content
+            });
         }
 
         public async IAsyncEnumerable<string> GetLogsAsync([EnumeratorCancellation] CancellationToken ct)
@@ -44,15 +31,19 @@ namespace KK.Agent.Library.Agents
         public void Complete()
         {
             _channel.Writer.Complete();
+            this._channel = Channel.CreateUnbounded<AgentLoggerModel>();
         }
     }
 
     public class AgentLoggerModel
     {
         [JsonProperty("agentId")]
-        public string AgentId { get; set; }
+        public required string AgentId { get; set; }
 
-        [JsonProperty("message")]
-        public string Message { get; set; }
+        [JsonProperty("reasoning")]
+        public required string Reasoning { get; set; }
+
+        [JsonProperty("content")]
+        public required string Content { get; set; }
     }
 }

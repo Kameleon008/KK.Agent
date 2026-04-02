@@ -10,8 +10,18 @@ const messageInput = document.getElementById('messageInput') as HTMLInputElement
 const sendBtn = document.getElementById('sendBtn') as HTMLButtonElement;
 const statusDiv = document.getElementById('status') as HTMLElement;
 
-// Add a message to the chat
-function addMessage(agentId: string, text: string, isSystem = false) {
+// Track all content sections for an agent message
+interface MessageSection {
+  type: 'content' | 'reasoning';
+  span: HTMLSpanElement;
+}
+
+let currentAgentId: string | null = null;
+let currentMessageDiv: HTMLDivElement | null = null;
+let currentSections: MessageSection[] = [];
+
+// Add a new message to the chat (for user/system messages)
+function addNewMessage(agentId: string, text: string, isSystem = false) {
   const messageDiv = document.createElement('div');
   messageDiv.className = `message ${isSystem ? 'system' : 'agent'}`;
   
@@ -23,12 +33,77 @@ function addMessage(agentId: string, text: string, isSystem = false) {
     agentSpan.style.fontWeight = 'bold';
     agentSpan.textContent = `[${agentId}] `;
     
+    const contentSpan = document.createElement('span');
+    contentSpan.textContent = text.replace(`[${agentId}] `, '');
+    
     messageDiv.appendChild(agentSpan);
-    messageDiv.textContent = text.replace(`[${agentId}] `, '');
+    messageDiv.appendChild(contentSpan);
   }
   
   messagesContainer.appendChild(messageDiv);
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Append text to current agent message or create new one
+function appendToAgentMessage(agentId: string, text: string, isReasoning = false) {
+  // If agent changed, create a new message bubble
+  if (currentAgentId !== agentId) {
+    // Save previous message if exists
+    if (currentMessageDiv) {
+      messagesContainer.appendChild(currentMessageDiv);
+    }
+    
+    currentAgentId = agentId;
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message agent';
+    
+    const agentSpan = document.createElement('span');
+    agentSpan.style.color = '#4ecca3';
+    agentSpan.style.fontWeight = 'bold';
+    agentSpan.textContent = `[${agentId}] `;
+    
+    messageDiv.appendChild(agentSpan);
+    
+    messagesContainer.appendChild(messageDiv);
+    currentMessageDiv = messageDiv;
+    currentSections = [];
+  }
+  
+  // Find existing section of this type or create new one
+  let section = currentSections.find(s => 
+    (s.type === 'content' && !isReasoning) || 
+    (s.type === 'reasoning' && isReasoning)
+  );
+  
+  if (!section) {
+    // Create new section
+    const span = document.createElement('span');
+    span.className = isReasoning ? 'reasoning' : 'content';
+    span.textContent = ''; // Start empty for streaming
+    
+    currentMessageDiv.appendChild(span);
+    
+    section = { type: isReasoning ? 'reasoning' : 'content', span };
+    currentSections.push(section);
+  }
+  
+  // Append text to the appropriate span
+  if (section) {
+    section.span.textContent += text;
+  }
+  
+  // Scroll to bottom
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Finalize and clear current agent message tracking
+function finalizeAgentMessage() {
+  if (currentMessageDiv) {
+    messagesContainer.appendChild(currentMessageDiv);
+    currentMessageDiv = null;
+    currentSections = [];
+  }
+  currentAgentId = null;
 }
 
 // Send message to the API endpoint
@@ -42,7 +117,7 @@ async function sendMessage() {
   statusDiv.textContent = 'Connecting...';
   
   try {
-    addMessage('You', message, false);
+    addNewMessage('You', message, false);
     
     const response = await fetch('https://localhost:7084/chat/stream', {
       method: 'POST',
@@ -67,19 +142,19 @@ async function sendMessage() {
       handleStream(response.body);
     } else {
       // Handle regular JSON response
-      addMessage('System', 'Streaming not supported, got regular response', true);
+      addNewMessage('System', 'Streaming not supported, got regular response', true);
     }
     
   } catch (error) {
     console.error('Error:', error);
-    addMessage('Error', `Failed to send message: ${error.message}`, true);
+    addNewMessage('Error', `Failed to send message: ${error.message}`, true);
     statusDiv.textContent = 'Ready';
     sendBtn.disabled = false;
   }
 }
 
 // Handle streaming response
-async function handleStream(body: ReadableStream<Uint8Array<ArrayBuffer>>) {
+async function handleStream(body: ReadableStream<Uint8Array>) {
   const reader = body.getReader();
   const decoder = new TextDecoder('utf-8');
   let buffer = ''; // Accumulate partial data here
@@ -118,12 +193,17 @@ async function handleStream(body: ReadableStream<Uint8Array<ArrayBuffer>>) {
         try {
           const data = JSON.parse(content);
           
-          if (data.agentId && data.message) {
-            // TIP: You might want to append text to the same message bubble 
-            // if it's a "token" stream, rather than creating a new bubble for every chunk.
-            addMessage(data.agentId, data.message);
+          if (data.agentId) {
+            // Append content if present
+            if (data.content) {
+              appendToAgentMessage(data.agentId, data.content);
+            }
+            // Append reasoning if present
+            else if (data.reasoning) {
+              appendToAgentMessage(data.agentId, data.reasoning, true);
+            }
           } else {
-            addMessage('System', `Received: ${JSON.stringify(data)}`, true);
+            addNewMessage('System', `Received: ${JSON.stringify(data)}`, true);
           }
         } catch (e) {
           console.error('Failed to parse JSON segment:', content);
@@ -131,18 +211,16 @@ async function handleStream(body: ReadableStream<Uint8Array<ArrayBuffer>>) {
       }
     }
     
+    finalizeAgentMessage();
     statusDiv.textContent = 'Stream completed';
   } catch (error) {
     console.error('Stream error:', error);
-    addMessage('Error', `Stream failed: ${error.message}`, true);
+    addNewMessage('Error', `Stream failed: ${error.message}`, true);
   } finally {
     reader.releaseLock();
     sendBtn.disabled = false;
   }
 }
-
-// Initialize - welcome message
-addMessage('System', 'Welcome! Enter a message to start the conversation.', true);
 
 document.addEventListener('DOMContentLoaded', () => {
   // Add Enter key handler

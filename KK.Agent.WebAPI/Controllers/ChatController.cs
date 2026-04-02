@@ -17,14 +17,11 @@ namespace KK.Agent.WebAPI.Controllers
 
         [HttpPost]
         [Route("stream")]
-        public async Task StreamChat([FromBody] ChatRequest request, OrchestratorAgent orchestrator, AgentLogger logger, OrchestratorTools tools)
+        public async Task StreamChat([FromBody] ChatRequest request, OrchestratorAgent orchestrator, AgentLogger logger)
         {
-            orchestrator.AddToolInstance(tools);
 
             Response.ContentType = "text/event-stream";
             Response.Headers.Append("Cache-Control", "no-cache");
-
-
 
             var disconnectToken = HttpContext.RequestAborted;
 

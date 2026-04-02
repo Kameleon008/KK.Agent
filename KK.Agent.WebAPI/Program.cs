@@ -3,7 +3,6 @@ using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Configuration.Models;
 using KK.Agent.WebAPI.Agents;
 using KK.Agent.WebAPI.Extensions;
-using KK.Agent.WebAPI.Tools;
 
 namespace KK.Agent.WebAPI;
 public static class Program
@@ -37,10 +36,9 @@ public static class Program
         });
 
 
-        builder.Services.AddSingleton<OrchestratorTools>();
-        builder.Services.AddTransient<OpenApiClient>();
-        builder.Services.AddSingleton<AgentLogger>();
-        builder.Services.AddTransient<OrchestratorAgent>();
+        builder.Services.AddScoped<AgentLogger>();
+        builder.Services.AddScoped<OpenApiClient>();
+        builder.Services.AddScoped<OrchestratorAgent>();
 
         var app = builder.Build();
 

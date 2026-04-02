@@ -17,8 +17,11 @@ if (require('electron-squirrel-startup')) {
 const createWindow = (): void => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    height: 600,
-    width: 1200,
+    width: 1280,
+    height: 720,
+    frame: false, 
+    fullscreen: true,
+    fullscreenable: true,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       webSecurity: false, // Disable web security to allow loading resources from different origins

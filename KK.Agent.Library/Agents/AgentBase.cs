@@ -138,16 +138,12 @@ namespace KK.Agent.Library.Agents
                     {
                         fullContent.Append(choice.Delta.ReasoningContent);
 
-                        await _logger.PublishAsync(AgentId, choice.Delta.ReasoningContent);
-
                         yield return choice.Delta.ReasoningContent;
                     }
 
                     if (string.IsNullOrEmpty(choice.Delta.Content) is false)
                     {
                         fullContent.Append(choice.Delta.Content);
-
-                        await _logger.PublishAsync(AgentId, choice.Delta.Content);
 
                         yield return choice.Delta.Content;
                     }
@@ -202,19 +198,13 @@ namespace KK.Agent.Library.Agents
                         continue;
                     }
 
-                    if (string.IsNullOrEmpty(choice.Delta.ReasoningContent) is false)
-                    {
-                        fullContent.Append(choice.Delta.ReasoningContent);
+                    fullContent.Append(choice.Delta.ReasoningContent);
+                    fullContent.Append(choice.Delta.Content);
 
-                        await _logger.PublishAsync(AgentId, choice.Delta.ReasoningContent);
-                    }
-
-                    if (string.IsNullOrEmpty(choice.Delta.Content) is false)
-                    {
-                        fullContent.Append(choice.Delta.Content);
-
-                        await _logger.PublishAsync(AgentId, choice.Delta.Content);
-                    }
+                    await _logger.PublishAsync(
+                        agentId: AgentId,
+                        reasoning: choice.Delta.ReasoningContent ?? string.Empty,
+                        content: choice.Delta.Content ?? string.Empty);
 
                     UpdateChatCompletionsResponseFromChunk(ref synthesizedResponse, chunk);
                 }

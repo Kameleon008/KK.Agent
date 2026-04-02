@@ -9,15 +9,12 @@ using KK.Agent.WebAPI.Agents;
 
 namespace KK.Agent.WebAPI.Tools
 {
-    public class OrchestratorTools(IServiceProvider serviceProvider)
+    public class OrchestratorTools(AgentLogger logger)
     {
-        private IServiceProvider serviceProvider = serviceProvider;
-
         [AgentTool("Calls_lore_agent_to_execute_task")]
         public async Task<string> call_lore_agent([Description("descriptikon of task for agent")] string task)
         {
             var config = ConfigService.Get<ConfigRoot>();
-            var logger = serviceProvider.GetRequiredService<AgentLogger>();
 
             var loreAgent = new LoreAgent(new OpenApiClient(config.Provider), logger);
             loreAgent.AddToolFromType<ExampleLoreTools>();
