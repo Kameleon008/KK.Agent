@@ -161,14 +161,14 @@ function appendToAgentMessage(agentId: string, text: string, isReasoning = false
     pendingContents.push({ type: isReasoning ? 'reasoning' : 'content', span, rawText });
   } else {
     // Append text to existing section's raw text (not HTML yet)
-    const pendingContent = pendingContents.find(pc => pc.type === section!.type);
+    const pendingContent = pendingContents.find(pc => pc.type === section?.type);
     if (pendingContent) {
       pendingContent.rawText += text;
     }
   }
   
   // Render markdown live for the current section type
-  const pendingContent = pendingContents.find(pc => pc.type === section!.type);
+  const pendingContent = pendingContents.find(pc => pc.type === section?.type);
   if (pendingContent) {
     section.span.innerHTML = parseMarkdown(pendingContent.rawText);
   }
@@ -201,11 +201,14 @@ async function finalizeAgentMessage() {
   currentAgentId = null;
 }
 
-// Create a new session with fresh ID
+// Create a new session with fresh ID (clears chat history)
 function createNewSession() {
   currentSessionId = uuidv4();
+  
+  // Clear all messages from the chat
+  messagesContainer.innerHTML = '';
+  
   statusDiv.textContent = `Nowa sesja utworzona: ${currentSessionId}`;
-  addNewMessage('System', `Utworzono nową sesję: ${currentSessionId}`, true);
 }
 
 // Send message to the API endpoint
