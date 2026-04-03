@@ -4,6 +4,7 @@
 
 import './index.css';
 import { marked } from 'marked';
+import { v4 as uuidv4 } from 'uuid';
 
 // Configure marked for safety and styling (use sync mode for streaming)
 marked.setOptions({
@@ -23,6 +24,9 @@ const messageInput = document.getElementById('messageInput') as HTMLTextAreaElem
 const sendBtn = document.getElementById('sendBtn') as HTMLButtonElement;
 const statusDiv = document.getElementById('status') as HTMLElement;
 const promptDropdown = document.getElementById('promptDropdown') as HTMLDivElement;
+
+// Session management
+let currentSessionId: string = uuidv4();
 
 // Prompt autocomplete state
 let currentPromptIndex = 0;
@@ -197,6 +201,13 @@ async function finalizeAgentMessage() {
   currentAgentId = null;
 }
 
+// Create a new session with fresh ID
+function createNewSession() {
+  currentSessionId = uuidv4();
+  statusDiv.textContent = `Nowa sesja utworzona: ${currentSessionId}`;
+  addNewMessage('System', `Utworzono nową sesję: ${currentSessionId}`, true);
+}
+
 // Send message to the API endpoint
 async function sendMessage() {
   const message = messageInput.value.trim();
@@ -216,7 +227,7 @@ async function sendMessage() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        sessionId: 'f0b1a6fb-a79c-4123-b5fa-1e1c0d1dc389',
+        sessionId: currentSessionId,
         message: message,
       }),
     });
@@ -465,6 +476,24 @@ async function insertPrompt(prompt: { name: string; filename: string }) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Update session ID display on startup
+  const sessionIdDisplay = document.getElementById('sessionIdDisplay') as HTMLElement;
+  if (sessionIdDisplay) {
+    sessionIdDisplay.textContent = `Sesja: ${currentSessionId}`;
+  }
+
+  // Create new session button
+  const newSessionBtn = document.getElementById('newSessionBtn') as HTMLButtonElement;
+  if (newSessionBtn) {
+    newSessionBtn.addEventListener('click', () => {
+      createNewSession();
+      // Update display immediately
+      if (sessionIdDisplay) {
+        sessionIdDisplay.textContent = `Sesja: ${currentSessionId}`;
+      }
+    });
+  }
+
   // Keep dropdown in sync with user typing (also enables filtering)
   messageInput.addEventListener('input', () => {
     void updatePromptDropdownFromInput();
