@@ -1,7 +1,11 @@
 using KK.Agent.Library.Attributes;
+using Newtonsoft.Json;
+using System.Collections;
 using System.ComponentModel;
+using System.Net;
 using System.Text;
 using System.Text.Json;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace KK.Agent.WebAPI.Tools;
 
@@ -17,7 +21,7 @@ public class HttpClientTools
         try
         {
             var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
-            
+
             using var response = await HttpClient.PostAsync(url, content);
             string responseBody = await response.Content.ReadAsStringAsync();
 
@@ -112,7 +116,7 @@ public class HttpClientTools
         try
         {
             var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
-            
+
             // Add API key header if available
             if (!string.IsNullOrWhiteSpace(apiKey))
             {
@@ -174,21 +178,21 @@ public class HttpClientTools
         try
         {
             HttpRequestMessage request;
-            
+
             if (string.Equals(method, "GET", StringComparison.OrdinalIgnoreCase))
             {
                 request = new HttpRequestMessage(HttpMethod.Get, url);
             }
             else if (string.Equals(method, "POST", StringComparison.OrdinalIgnoreCase))
             {
-                var content = string.IsNullOrEmpty(jsonBody) 
+                var content = string.IsNullOrEmpty(jsonBody)
                     ? new StringContent("", Encoding.UTF8, "application/json")
                     : new StringContent(jsonBody!, Encoding.UTF8, "application/json");
                 request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
             }
             else
             {
-                var content = string.IsNullOrEmpty(jsonBody) 
+                var content = string.IsNullOrEmpty(jsonBody)
                     ? new StringContent("", Encoding.UTF8, "application/json")
                     : new StringContent(jsonBody!, Encoding.UTF8, "application/json");
                 request = new HttpRequestMessage(new HttpMethod(method), url) { Content = content };
@@ -259,5 +263,123 @@ public class HttpClientTools
         /// Converts the result to a JSON string.
         /// </summary>
         public override string ToString() => JsonSerializer.Serialize(this);
+    }
+
+    [AgentTool("Validate prompt")]
+    public async Task<string> ValidatePrompt(
+        [Description("REQUIRED apiKey which is used to authorize request")] string apiKey,
+        [Description("Prompt, must contains placeholders {ID} and {DESCRIPTION}")] string prompt)
+    {
+        try
+        {
+
+            using var itemsResponse = await HttpClient.GetAsync($"https://hub.ag3nts.org/data/{apiKey}/categorize.csv");
+
+            var itemsResult = await itemsResponse.Content.ReadAsStringAsync();
+
+            var items = ParseCsv(itemsResult);
+
+            var sortedList = new List<ItemToClassify>();
+
+            sortedList.Add(items[9]);
+            sortedList.Add(items[3]);
+            sortedList.Add(items[8]);
+            sortedList.Add(items[1]);
+            sortedList.Add(items[0]);
+            sortedList.Add(items[2]);
+            sortedList.Add(items[6]);
+            sortedList.Add(items[4]);
+            sortedList.Add(items[7]);
+            sortedList.Add(items[5]);
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(prompt);
+            Console.ResetColor();
+
+            var responses = new List<string>();
+
+            foreach (var item in sortedList)
+            {
+
+                var payload = new
+                {
+                    apikey = apiKey,
+                    task = "categorize",
+                    answer = new
+                    {
+                        prompt = prompt.Replace("{ID}", item.Id).Replace("{DESCRIPTION}", item.Description)
+                    }
+                };
+
+                var json = JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                using var response = await HttpClient.PostAsync("https://hub.ag3nts.org/verify", content);
+
+                var result = await response.Content.ReadAsStringAsync();
+
+                if (response.StatusCode == HttpStatusCode.Accepted)
+                {
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine(result);
+                    Console.ResetColor();
+
+                    responses.Add(result);
+
+                    continue;
+                }
+
+
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(result);
+                Console.ResetColor();
+                return result;
+            }
+
+            return $"Products properly classified with prompt {prompt}, responses: {string.Join(", ", responses)}";
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
+    }
+
+    public static List<ItemToClassify> ParseCsv(string csv)
+    {
+        var result = new List<ItemToClassify>();
+
+        var lines = csv.Split('\n')
+            .Skip(1) // pomijamy nagłówek
+            .Where(l => !string.IsNullOrWhiteSpace(l));
+
+        foreach (var line in lines)
+        {
+            var parts = line.Split(',');
+
+            if (parts.Length < 2) continue;
+
+            var id = parts[0].Trim();
+            var description = parts[1].Trim().Trim('"');
+
+            result.Add(new ItemToClassify
+            {
+                Id = id,
+                Description = description
+            });
+        }
+
+        return result;
+    }
+
+    public class ItemToClassify
+    {
+        [JsonProperty("id")]
+        [Description("indentificator of item")]
+        public string Id { get; set; }
+
+        [JsonProperty("description")]
+        [Description("description of item")]
+        public string Description { get; set; }
+
     }
 }

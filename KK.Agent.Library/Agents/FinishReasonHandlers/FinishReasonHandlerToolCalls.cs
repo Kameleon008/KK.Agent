@@ -6,11 +6,11 @@ namespace KK.Agent.Library.Agents.FinishReasonHandlers
     {
         public bool Handles(string finishReason) => finishReason == "tool_calls";
 
-        public async Task<string?> HandleAsync(ChatCompletionChoice choice, ChatHistory history)
+        public async Task<string?> HandleAsync(string caller, ChatCompletionChoice choice, ChatHistory history)
         {
             foreach (var toolCall in choice.Message.ToolCalls!)
             {
-                await logger.PublishAsync("System", $"Calls tool: {toolCall.Function!.Name}...", string.Empty);
+                await logger.PublishAsync("System", $"{caller} calls tool: {toolCall.Function!.Name}..., arguments: {toolCall.Function.Arguments}", string.Empty);
 
                 var result = await tools[toolCall.Function!.Name](toolCall.Function.Arguments);
 

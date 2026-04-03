@@ -12,14 +12,14 @@ namespace KK.Agent.WebAPI.Tools
     public class OrchestratorTools(AgentLogger logger, AgentHistory history)
     {
         [AgentTool("Call http client agent to execute some http call")]
-        public async Task<string> call_lore_agent(
+        public async Task<string> call_http_client_agent(
             [Description("description of task for agent")] string task)
         {
             var config = ConfigService.Get<ConfigRoot>();
 
-            var loreAgent = new HttpAgent(new OpenApiClient(config.Provider), logger, history);
+            var agent = new HttpAgent(new OpenApiClient(config.Provider), logger, history);
 
-            return await loreAgent.RunStreamAsync(task);
+            return await agent.RunStreamAsync(task);
         }
     }
 }

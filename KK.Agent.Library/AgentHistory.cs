@@ -16,9 +16,7 @@ namespace KK.Agent.Library
                 }
             }
 
-            this._chats.Add(sessionId, []);
-            return _chats[sessionId];
-
+            return new ChatHistory();
         }
     }
 }
