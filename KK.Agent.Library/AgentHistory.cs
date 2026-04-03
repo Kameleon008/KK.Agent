@@ -14,6 +14,10 @@ namespace KK.Agent.Library
                 {
                     return chatHistory;
                 }
+
+                this._chats.Add(sessionId, []);
+
+                return this._chats[sessionId];
             }
 
             return new ChatHistory();

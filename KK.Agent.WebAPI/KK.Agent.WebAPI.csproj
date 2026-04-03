@@ -16,6 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Agents\ImageAgent.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Agents\HttpAgent.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

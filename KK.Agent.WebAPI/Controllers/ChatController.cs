@@ -11,7 +11,8 @@ namespace KK.Agent.WebAPI.Controllers
         [HttpPost]
         public async Task<string> Chat([FromBody] ChatRequest request, OrchestratorAgent orchestrator, CancellationToken ct)
         {
-            return await orchestrator.RunAsync(request.Message, request.SessionId);
+            orchestrator.AddMessage("user", request.Message, request.SessionId);
+            return await orchestrator.RunAsync(request.SessionId);
         }
 
         [HttpPost]
@@ -22,6 +23,7 @@ namespace KK.Agent.WebAPI.Controllers
 
             var disconnectToken = HttpContext.RequestAborted;
 
+            orchestrator.AddMessage("user", request.Message, request.SessionId);
             RunOrchestratorStreamAsync(request, orchestrator, logger, disconnectToken);
 
             await foreach (var log in logger.GetLogsAsync(disconnectToken))
@@ -35,7 +37,7 @@ namespace KK.Agent.WebAPI.Controllers
         {
             var _ = Task.Run(async () =>
             {
-                await orchestrator.RunStreamAsync(request.Message, request.SessionId);
+                await orchestrator.RunStreamAsync(request.SessionId);
                 logger.Complete();
             }, disconnectToken);
         }

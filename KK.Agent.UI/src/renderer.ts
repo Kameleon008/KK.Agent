@@ -194,7 +194,8 @@ async function finalizeAgentMessage() {
     // Render markdown for all pending content before finalizing
     await renderPendingMarkdown();
     
-    messagesContainer.appendChild(currentMessageDiv);
+    // Message is already appended in appendToAgentMessage, 
+    // so we only need to reset the state
     currentMessageDiv = null;
     currentSections = [];
   }

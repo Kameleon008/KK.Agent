@@ -11,12 +11,12 @@ namespace KK.Agent.Library.Agents
 {
     public abstract class AgentBase
     {
-        private readonly OpenApiClient _provider;
-        private readonly AgentHistory _history;
-        private readonly List<ToolDefinition> _toolDefinitions = [];
-        private readonly Dictionary<string, Func<string, Task<string>>> _tools = new();
-        private readonly List<IFinishReasonHandler> _handlers = [];
-        private readonly AgentLogger _logger;
+        protected readonly OpenApiClient _provider;
+        protected readonly AgentHistory _history;
+        protected readonly List<ToolDefinition> _toolDefinitions = [];
+        protected readonly Dictionary<string, Func<string, Task<string>>> _tools = new();
+        protected readonly List<IFinishReasonHandler> _handlers = [];
+        protected readonly AgentLogger _logger;
 
         protected virtual string AgentId { get; set; } = Guid.NewGuid().ToString();
 
@@ -49,11 +49,16 @@ namespace KK.Agent.Library.Agents
             RegisterTools(toolInstance);
         }
 
-        public async Task<string> RunAsync(string prompt, string sessionId = "")
+        public void AddMessage(string role, string message, string sessionId = "")
         {
             var history = _history.GetChatHistory(sessionId);
             history.AddSystemMessage(SystemPrompt);
-            history.AddUserMessage(prompt);
+            history.AddMessage(role, message);
+        }
+
+        public async Task<string> RunAsync(string sessionId = "")
+        {
+            var history = _history.GetChatHistory(sessionId);
 
             foreach (var _ in Enumerable.Range(0, 5))
             {
@@ -83,11 +88,11 @@ namespace KK.Agent.Library.Agents
             return "Iteration limit reached without final answer.";
         }
 
-        public async Task<T?> RunAsync<T>(string prompt, string sessionId = "")
+        public async Task<T?> RunAsync<T>(string sessionId = "")
             where T : class, new()
         {
             var history = _history.GetChatHistory(sessionId);
-            await this.RunAsync(prompt, sessionId);
+            await this.RunAsync(sessionId);
 
             var request = new ChatCompletionsRequestBuilder()
                 .SetModel(_provider.Model)
@@ -108,11 +113,9 @@ namespace KK.Agent.Library.Agents
             return result == null ? null : JsonConvert.DeserializeObject<T>(result);
         }
 
-        public async Task<string> RunStreamAsync(string prompt, string sessionId = "")
+        public async Task<string> RunStreamAsync(string sessionId = "")
         {
             var history = _history.GetChatHistory(sessionId);
-            history.AddSystemMessage(SystemPrompt);
-            history.AddUserMessage(prompt);
 
             foreach (var _ in Enumerable.Range(0, 5))
             {
@@ -173,7 +176,7 @@ namespace KK.Agent.Library.Agents
         }
 
 
-        private static void UpdateChatCompletionsResponseFromChunk(ref ChatCompletionsResponse? response, ChatCompletionsChunk chunk)
+        protected static void UpdateChatCompletionsResponseFromChunk(ref ChatCompletionsResponse? response, ChatCompletionsChunk chunk)
         {
             response ??= new ChatCompletionsResponse
             {

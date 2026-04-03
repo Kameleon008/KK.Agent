@@ -19,7 +19,31 @@ namespace KK.Agent.WebAPI.Tools
 
             var agent = new HttpAgent(new OpenApiClient(config.Provider), logger, history);
 
-            return await agent.RunStreamAsync(task);
+            agent.AddMessage("User", task);
+
+            return await agent.RunStreamAsync();
+        }
+
+        [AgentTool("Call image agent to describe some image")]
+        public async Task<string> call_image_agent(
+            [Description("url of image to describe")] string url,
+            [Description("description of details of image on which agent should focus")] string focus,
+            [Description("description of task for agent - main task")] string task)
+        {
+            var config = ConfigService.Get<ConfigRoot>();
+
+            var agent = new ImageAgent(new OpenApiClient(config.Provider), logger, history);
+
+            var prompt =
+                $"""
+                IMAGE URL: {url}
+                TASK TO DO: {task}
+                ADDITIONAL DETAILS AGENT SHOULD FOCUS ON: {focus}         
+                """;
+
+            agent.AddMessage("user", prompt);
+
+            return await agent.RunStreamAsync(prompt);
         }
     }
 }

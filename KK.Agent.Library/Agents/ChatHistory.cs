@@ -21,7 +21,10 @@ namespace KK.Agent.Library.Agents
 
         public void AddSystemMessage(string content)
         {
-            this.AddMessage("system", content);
+            if (this.Count == 0)
+            {
+                this.AddMessage("system", content);
+            }
         }
 
         public void AddMessage(ChatCompletionChoice choice)

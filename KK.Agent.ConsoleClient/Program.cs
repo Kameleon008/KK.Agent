@@ -15,8 +15,8 @@ public static class Program
         var config = ConfigService.Get<ConfigRoot>();
         var logger = new AgentLogger();
 
-        var orchestratorAgent = new OrchestratorAgent(new OpenApiClient(config.Provider), logger);
-        orchestratorAgent.AddToolFromType<OrchestratorTools>();
+        var orchestrator = new OrchestratorAgent(new OpenApiClient(config.Provider), logger);
+        orchestrator.AddToolFromType<OrchestratorTools>();
 
 
         //var question1 = "Where does Luke Skywalker come from? Tell me about his home planet";
@@ -29,11 +29,12 @@ public static class Program
         Console.Write("Response: "); // Używamy Write, żeby tekst pojawiał się w tej samej linii
 
         // Używamy await foreach do konsumowania strumienia
-        await foreach (var chunk in orchestratorAgent.RunStreamAsync(question3))
-        {
-            // Wypisujemy każdy kawałek natychmiast bez nowej linii
-            Console.Write(chunk);
-        }
+        //orchestrator.AddMessage("User", question3);
+        //await foreach (var chunk in orchestrator.RunStreamAsync())
+        //{
+        //    // Wypisujemy każdy kawałek natychmiast bez nowej linii
+        //    Console.Write(chunk);
+        //}
 
         Console.WriteLine("\n-------------------------------");
 
