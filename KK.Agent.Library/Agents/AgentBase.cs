@@ -56,6 +56,12 @@ namespace KK.Agent.Library.Agents
             history.AddMessage(role, message);
         }
 
+        public void AddImage(string role, string text, string imageBase64Encoded, string sessionId = "")
+        {
+            var history = _history.GetChatHistory(sessionId);
+            history.AddImage(role, SystemPrompt + text, imageBase64Encoded);
+        }
+
         public async Task<string> RunAsync(string sessionId = "")
         {
             var history = _history.GetChatHistory(sessionId);
@@ -151,15 +157,18 @@ namespace KK.Agent.Library.Agents
                     UpdateChatCompletionsResponseFromChunk(ref synthesizedResponse, chunk);
                 }
 
-                history.AddMessage(synthesizedResponse!.Choices.Single());
+                if (synthesizedResponse != null)
+                {
+                    history.AddMessage(synthesizedResponse.Choices.Single());
 
-                var result = await _handlers
-                    .Single(h => h.Handles(synthesizedResponse.Choices.Single().FinishReason))
-                    .HandleAsync(AgentId, synthesizedResponse.Choices.Single(), history);
+                    var result = await _handlers
+                        .Single(h => h.Handles(synthesizedResponse.Choices.Single().FinishReason))
+                        .HandleAsync(AgentId, synthesizedResponse.Choices.Single(), history);
 
-                if (result == null) continue;
+                    if (result == null) continue;
 
-                return result;
+                    return result;
+                }
             }
 
             return "Iteration limit reached without final answer.";

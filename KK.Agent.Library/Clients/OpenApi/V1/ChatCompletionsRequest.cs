@@ -9,7 +9,7 @@ public class ChatCompletionsRequest
     public string? Model { get; set; }
 
     [JsonProperty("messages", NullValueHandling = NullValueHandling.Ignore)]
-    public List<ChatMessage>? Messages { get; set; }
+    public List<object>? Messages { get; set; }
 
     [JsonProperty("tools", NullValueHandling = NullValueHandling.Ignore)]
     public List<ToolDefinition>? Tools { get; set; }
@@ -159,4 +159,32 @@ public class PropertyDefinition
 
     [JsonProperty("description", NullValueHandling = NullValueHandling.Ignore)]
     public string? Description { get; set; }
+}
+
+public class ChatImageMessage
+{
+
+    [JsonProperty("role", NullValueHandling = NullValueHandling.Ignore)]
+    public string Role { get; set; } = null!;
+
+    [JsonProperty("content", NullValueHandling = NullValueHandling.Ignore)]
+    public List<ChatImageContent> Content { get; set; } = null!;
+}
+
+public class ChatImageContent
+{
+    [JsonProperty("type", NullValueHandling = NullValueHandling.Ignore)]
+    public string Type { get; set; } = "image";
+
+    [JsonProperty("text", NullValueHandling = NullValueHandling.Ignore)]
+    public string? Text { get; set; }
+    
+    [JsonProperty("image_url", NullValueHandling = NullValueHandling.Ignore)]
+    public ChatImage? Image { get; set; }
+}
+
+public class ChatImage
+{
+    [JsonProperty("url", NullValueHandling = NullValueHandling.Ignore)]
+    public string Url { get; set; } = null!;
 }

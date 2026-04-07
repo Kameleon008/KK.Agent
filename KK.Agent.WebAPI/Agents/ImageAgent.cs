@@ -1,8 +1,6 @@
 ﻿using KK.Agent.Library;
 using KK.Agent.Library.Agents;
 using KK.Agent.Library.Clients.OpenApi;
-using KK.Agent.Library.Clients.OpenApi.V1;
-using KK.Agent.Library.Clients.OpenApi.V1.Builders;
 using KK.Agent.WebAPI.Tools;
 using System.Text;
 
@@ -14,67 +12,41 @@ namespace KK.Agent.WebAPI.Agents
 
         protected override string AgentId { get; set; } = nameof(ImageAgent);
 
+        private static readonly HttpClient HttpClient = new HttpClient();
+
         public ImageAgent(OpenApiClient provider, AgentLogger logger, AgentHistory history) : base(provider, logger, history)
         {
-            this.AddToolInstance(new ImageTools(logger));
         }
 
-        public void AddMessage(string role, string message, string sessionId = "")
+        public async Task<string> FetchImageAsBase64Async(string url)
         {
-            var history = _history.GetChatHistory(sessionId);
-            history.AddSystemMessage(SystemPrompt);
-            history.AddMessage(role, message);
-        }
-
-        public async Task<string> RunStreamAsync(string prompt, string sessionId = "")
-        {
-            var history = _history.GetChatHistory(sessionId);
-
-            foreach (var _ in Enumerable.Range(0, 5))
+            try
             {
-                ChatCompletionsResponse? synthesizedResponse = null;
+                using var response = await HttpClient.GetAsync(url);
 
-                var request = new ChatCompletionsRequestBuilder()
-                    .SetModel(_provider.Model)
-                    .SetMessages(history)
-                    .SetTools(_toolDefinitions)
-                    .SetStream(true)
-                    .Build();
-
-                var fullContent = new StringBuilder();
-
-                await foreach (var chunk in _provider.GetChatCompletionsStreamAsync(request))
+                if (!response.IsSuccessStatusCode)
                 {
-                    var choice = chunk.Choices?.FirstOrDefault();
-
-                    if (choice?.Delta == null)
-                    {
-                        continue;
-                    }
-
-                    fullContent.Append(choice.Delta.ReasoningContent);
-                    fullContent.Append(choice.Delta.Content);
-
-                    await _logger.PublishAsync(
-                        agentId: AgentId,
-                        reasoning: choice.Delta.ReasoningContent,
-                        content: choice.Delta.Content);
-
-                    UpdateChatCompletionsResponseFromChunk(ref synthesizedResponse, chunk);
+                    return $"Failed to fetch image from {url}. Status code: {(int)response.StatusCode}";
                 }
 
-                history.AddMessage(synthesizedResponse!.Choices.Single());
+                var contentType = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
 
-                var result = await _handlers
-                    .Single(h => h.Handles(synthesizedResponse.Choices.Single().FinishReason))
-                    .HandleAsync(AgentId, synthesizedResponse.Choices.Single(), history);
+                // Check if the content is an image
+                if (!contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                {
+                    return $"Content from {url} is not an image. MIME type: {contentType}";
+                }
 
-                if (result == null) continue;
+                var imageBytes = await response.Content.ReadAsByteArrayAsync();
+                var base64Image = Convert.ToBase64String(imageBytes);
 
-                return result;
+                // Return with data URI prefix for easy use in HTML/markdown
+                return $"data:{contentType};base64,{base64Image}";
             }
-
-            return "Iteration limit reached without final answer.";
+            catch (Exception ex)
+            {
+                return $"Error fetching image from {url}: {ex.Message}";
+            }
         }
 
     }

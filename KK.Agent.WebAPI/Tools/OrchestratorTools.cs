@@ -15,13 +15,15 @@ namespace KK.Agent.WebAPI.Tools
         public async Task<string> call_http_client_agent(
             [Description("description of task for agent")] string task)
         {
+            var sessionId = Guid.NewGuid().ToString();
+
             var config = ConfigService.Get<ConfigRoot>();
 
             var agent = new HttpAgent(new OpenApiClient(config.Provider), logger, history);
 
             agent.AddMessage("User", task);
 
-            return await agent.RunStreamAsync();
+            return await agent.RunStreamAsync(sessionId);
         }
 
         [AgentTool("Call image agent to describe some image")]
@@ -41,9 +43,12 @@ namespace KK.Agent.WebAPI.Tools
                 ADDITIONAL DETAILS AGENT SHOULD FOCUS ON: {focus}         
                 """;
 
-            agent.AddMessage("user", prompt);
+            var sessionId = Guid.NewGuid().ToString();
+            var image = await agent.FetchImageAsBase64Async(url);
 
-            return await agent.RunStreamAsync(prompt);
+            agent.AddImage("user", prompt, image, sessionId);
+
+            return await agent.RunStreamAsync(sessionId);
         }
     }
 }

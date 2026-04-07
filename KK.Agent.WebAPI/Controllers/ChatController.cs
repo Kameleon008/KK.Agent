@@ -26,11 +26,19 @@ namespace KK.Agent.WebAPI.Controllers
             orchestrator.AddMessage("user", request.Message, request.SessionId);
             RunOrchestratorStreamAsync(request, orchestrator, logger, disconnectToken);
 
-            await foreach (var log in logger.GetLogsAsync(disconnectToken))
+            try
             {
-                await Response.WriteAsync($"data: {log}\n\n", disconnectToken);
-                await Response.Body.FlushAsync(disconnectToken);
+                await foreach (var log in logger.GetLogsAsync(disconnectToken))
+                {
+                    await Response.WriteAsync($"data: {log}\n\n", disconnectToken);
+                    await Response.Body.FlushAsync(disconnectToken);
+                }
             }
+            catch (OperationCanceledException)
+            {
+                logger.Complete();
+            }
+
         }
 
         private static void RunOrchestratorStreamAsync(ChatRequest request, OrchestratorAgent orchestrator, AgentLogger logger, CancellationToken disconnectToken)

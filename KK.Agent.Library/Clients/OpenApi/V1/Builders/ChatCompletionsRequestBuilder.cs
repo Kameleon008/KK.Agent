@@ -16,9 +16,9 @@ namespace KK.Agent.Library.Clients.OpenApi.V1.Builders
             return this;
         }
 
-        public ChatCompletionsRequestBuilder SetMessages(IEnumerable<ChatMessage> messages)
+        public ChatCompletionsRequestBuilder SetMessages(IEnumerable<object> messages)
         {
-            _request.Messages = messages.ToList<ChatMessage>();
+            _request.Messages = messages.ToList();
             return this;
         }
 
