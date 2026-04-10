@@ -2,6 +2,7 @@ using KK.Agent.Library;
 using KK.Agent.Library.Agents;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Configuration.Models;
+using KK.Agent.Library.Mcp;
 using KK.Agent.WebAPI.Agents;
 using KK.Agent.WebAPI.Extensions;
 
@@ -25,6 +26,14 @@ public static class Program
             return config;
         });
 
+        builder.Services.AddSingleton<ConfigMcpServers>(_ =>
+        {
+            var config = new ConfigMcpServers();
+            var section = builder.Configuration.GetSection(ConfigMcpServers.Name);
+            section.Bind(config.Servers);
+            return config;
+        });
+
         builder.Services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>
@@ -36,6 +45,7 @@ public static class Program
             });
         });
 
+        builder.Services.AddScoped<McpClient>();
 
         builder.Services.AddSingleton<AgentHistory>();
 

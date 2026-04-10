@@ -1,6 +1,10 @@
 using KK.Agent.Library.Agents;
+using KK.Agent.Library.Mcp;
 using KK.Agent.WebAPI.Agents;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System.Text;
+using System.Text.Json;
 
 namespace KK.Agent.WebAPI.Controllers
 {
@@ -38,7 +42,36 @@ namespace KK.Agent.WebAPI.Controllers
             {
                 logger.Complete();
             }
+        }
 
+        [HttpPost]
+        [Route("mcp")]
+        public async Task<string> McpStdioTest([FromBody] JsonElement request, McpClient client, AgentLogger logger)
+        {
+            client.Start();
+
+            var json = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(request.GetRawText()));
+            await client.Process.StandardInput.WriteLineAsync(json);
+            await client.Process.StandardInput.FlushAsync();
+
+            await client.Process.StandardInput.WriteLineAsync(json);
+            await client.Process.StandardInput.FlushAsync();
+
+            var buffer = new StringBuilder();
+            while (true)
+            {
+                var line = await client.Process.StandardOutput.ReadLineAsync();
+                Console.WriteLine(line);
+                if (line == null) break;
+
+                buffer.Append(line.Trim());
+                if (line.Trim().EndsWith("}")) break;
+            }
+
+            var response = buffer.ToString();
+            Console.WriteLine(response);
+
+            return response;
         }
 
         private static void RunOrchestratorStreamAsync(ChatRequest request, OrchestratorAgent orchestrator, AgentLogger logger, CancellationToken disconnectToken)
