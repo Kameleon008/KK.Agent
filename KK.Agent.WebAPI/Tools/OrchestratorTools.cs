@@ -5,11 +5,12 @@ using KK.Agent.Library.Attributes;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Configuration;
 using KK.Agent.Library.Configuration.Models;
+using KK.Agent.Library.Mcp;
 using KK.Agent.WebAPI.Agents;
 
 namespace KK.Agent.WebAPI.Tools
 {
-    public class OrchestratorTools(AgentLogger logger, AgentHistory history)
+    public class OrchestratorTools(AgentLogger logger, AgentHistory history, ConfigMcpServers mcp)
     {
         [AgentTool("Call http client agent to execute some http call")]
         public async Task<string> call_http_client_agent(
@@ -19,7 +20,7 @@ namespace KK.Agent.WebAPI.Tools
 
             var config = ConfigService.Get<ConfigRoot>();
 
-            var agent = new HttpAgent(new OpenApiClient(config.Provider), logger, history);
+            var agent = new HttpAgent(new OpenApiClient(config.Provider), logger, history, mcp);
 
             agent.AddMessage("User", task);
 
@@ -34,7 +35,7 @@ namespace KK.Agent.WebAPI.Tools
         {
             var config = ConfigService.Get<ConfigRoot>();
 
-            var agent = new ImageAgent(new OpenApiClient(config.Provider), logger, history);
+            var agent = new ImageAgent(new OpenApiClient(config.Provider), logger, history, mcp);
 
             var prompt =
                 $"""

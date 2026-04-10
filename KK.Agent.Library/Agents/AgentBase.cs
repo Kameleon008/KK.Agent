@@ -6,6 +6,7 @@ using KK.Agent.Library.Extensions;
 using KK.Agent.Library.Tools;
 using Newtonsoft.Json;
 using System.Text;
+using KK.Agent.Library.Mcp;
 
 namespace KK.Agent.Library.Agents
 {
@@ -17,16 +18,19 @@ namespace KK.Agent.Library.Agents
         protected readonly Dictionary<string, Func<string, Task<string>>> _tools = new();
         protected readonly List<IFinishReasonHandler> _handlers = [];
         protected readonly AgentLogger _logger;
+        protected readonly ConfigMcpServers _mcpServers;
+        protected readonly List<McpClient> _mcpClients = [];
 
         protected virtual string AgentId { get; set; } = Guid.NewGuid().ToString();
 
         protected virtual string SystemPrompt { get; set; } = "You are helpful AI assistant";
 
-        protected AgentBase(OpenApiClient provider, AgentLogger logger, AgentHistory history)
+        protected AgentBase(OpenApiClient provider, AgentLogger logger, AgentHistory history, ConfigMcpServers mcpServers)
         {
             this._logger = logger;
             this._provider = provider;
             this._history = history;
+            this._mcpServers = mcpServers;
             this.InitializeHandlers();
         }
 
@@ -47,6 +51,15 @@ namespace KK.Agent.Library.Agents
         public void AddToolInstance(object toolInstance)
         {
             RegisterTools(toolInstance);
+        }
+
+        public void AddMcpServer(string name)
+        {
+            var config = this._mcpServers.Servers.SingleOrDefault(s => s.Name == name);
+            if (config != null)
+            {
+                _mcpClients.Add(new McpClient(config));
+            }
         }
 
         public void AddMessage(string role, string message, string sessionId = "")

@@ -3,6 +3,7 @@ using KK.Agent.Library.Agents;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.WebAPI.Tools;
 using System.Text;
+using KK.Agent.Library.Mcp;
 
 namespace KK.Agent.WebAPI.Agents
 {
@@ -14,7 +15,7 @@ namespace KK.Agent.WebAPI.Agents
 
         private static readonly HttpClient HttpClient = new HttpClient();
 
-        public ImageAgent(OpenApiClient provider, AgentLogger logger, AgentHistory history) : base(provider, logger, history)
+        public ImageAgent(OpenApiClient provider, AgentLogger logger, AgentHistory history, ConfigMcpServers mcp) : base(provider, logger, history, mcp)
         {
         }
 

@@ -2,29 +2,31 @@
 
 namespace KK.Agent.Library.Mcp;
 
-public class McpClient(ConfigMcpServers options)
+public class McpClient(ConfigMcpServer options)
 {
-    private readonly ConfigMcpServer _options = options.Servers.First();
-    public Process? Process;
+    public string Name => options.Name;
 
+    public Process? Process;
+    
     public StreamWriter? Input => Process?.StandardInput;
+    
     public StreamReader? Output => Process?.StandardOutput;
 
     public void Start()
     {
         var psi = new ProcessStartInfo
         {
-            FileName = _options.Command,
-            Arguments = _options.Arguments,
+            FileName = options.Command,
+            Arguments = options.Arguments,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            UseShellExecute = _options.UseShellExecute
+            UseShellExecute = options.UseShellExecute
         };
 
-        if (!string.IsNullOrEmpty(_options.WorkingDirectory))
+        if (!string.IsNullOrEmpty(options.WorkingDirectory))
         {
-            psi.WorkingDirectory = _options.WorkingDirectory;
+            psi.WorkingDirectory = options.WorkingDirectory;
         }
 
         Process = new Process { StartInfo = psi };

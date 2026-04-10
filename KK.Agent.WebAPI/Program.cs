@@ -3,10 +3,11 @@ using KK.Agent.Library.Agents;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Configuration.Models;
 using KK.Agent.Library.Mcp;
-using KK.Agent.WebAPI.Agents;
 using KK.Agent.WebAPI.Extensions;
+using KK.Agent.WebAPI.Startup;
 
 namespace KK.Agent.WebAPI;
+
 public static class Program
 {
     public static void Main(string[] args)
@@ -26,14 +27,6 @@ public static class Program
             return config;
         });
 
-        builder.Services.AddSingleton<ConfigMcpServers>(_ =>
-        {
-            var config = new ConfigMcpServers();
-            var section = builder.Configuration.GetSection(ConfigMcpServers.Name);
-            section.Bind(config.Servers);
-            return config;
-        });
-
         builder.Services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>
@@ -45,13 +38,22 @@ public static class Program
             });
         });
 
-        builder.Services.AddScoped<McpClient>();
-
         builder.Services.AddSingleton<AgentHistory>();
 
         builder.Services.AddScoped<AgentLogger>();
         builder.Services.AddScoped<OpenApiClient>();
-        builder.Services.AddScoped<OrchestratorAgent>();
+
+        builder.Services.AddAgents();
+        builder.Services.AddMcpServers(builder.Configuration);
+
+        builder.Services.AddScoped(_ =>
+        {
+            var config = new ConfigMcpServers();
+            var section = builder.Configuration.GetSection(ConfigMcpServers.Name);
+            section.Bind(config.Servers);
+            return new McpClient(config.Servers.First());
+
+        });
 
         var app = builder.Build();
 
