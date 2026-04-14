@@ -12,21 +12,13 @@ namespace KK.Agent.WebAPI.Startup
 
         public static void AddMcpServers(this IServiceCollection services, IConfiguration configuration)
         {
+
+            var config = new ConfigMcpServers();
             var section = configuration.GetSection(ConfigMcpServers.Name);
-            var config = section.Get<ConfigMcpServers>();
+            section.Bind(config.Servers);
 
-            if (config == null)
-            {
-                return;
-            }
-
-            services.AddSingleton(config);
-
-            foreach (var server in config.Servers)
-            {
-                services.AddScoped<McpClient>(sp => new McpClient(server));
-            }
-        }
+            services.AddSingleton(config ?? new ConfigMcpServers());
+;        }
 
     }
 }

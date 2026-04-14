@@ -52,7 +52,6 @@ public static class Program
             var section = builder.Configuration.GetSection(ConfigMcpServers.Name);
             section.Bind(config.Servers);
             return new McpClient(config.Servers.First());
-
         });
 
         var app = builder.Build();

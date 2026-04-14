@@ -58,7 +58,10 @@ namespace KK.Agent.Library.Agents
             var config = this._mcpServers.Servers.SingleOrDefault(s => s.Name == name);
             if (config != null)
             {
-                _mcpClients.Add(new McpClient(config));
+                var mcpClient = new McpClient(config);
+                _mcpClients.Add(mcpClient);
+
+                //_ = LoadToolDefinitionsAsync(mcpClient);
             }
         }
 
@@ -94,7 +97,7 @@ namespace KK.Agent.Library.Agents
 
                 var result = await _handlers
                     .Single(handler => handler.Handles(choice.FinishReason))
-                    .HandleAsync(AgentId, choice, history);
+                    .HandleAsync(AgentId, choice, history, this._mcpClients);
 
                 if (result == null)
                 {
@@ -127,13 +130,18 @@ namespace KK.Agent.Library.Agents
 
             var result = await _handlers
                 .Single(handler => handler.Handles(choice.FinishReason))
-                .HandleAsync(AgentId, choice, history);
+                .HandleAsync(AgentId, choice, history, this._mcpClients);
 
             return result == null ? null : JsonConvert.DeserializeObject<T>(result);
         }
 
         public async Task<string> RunStreamAsync(string sessionId = "")
         {
+            foreach (var client in this._mcpClients)
+            {
+                await client.LoadToolsAsync(this._toolDefinitions);
+            }
+
             var history = _history.GetChatHistory(sessionId);
 
             foreach (var _ in Enumerable.Range(0, 5))
@@ -176,7 +184,7 @@ namespace KK.Agent.Library.Agents
 
                     var result = await _handlers
                         .Single(h => h.Handles(synthesizedResponse.Choices.Single().FinishReason))
-                        .HandleAsync(AgentId, synthesizedResponse.Choices.Single(), history);
+                        .HandleAsync(AgentId, synthesizedResponse.Choices.Single(), history, this._mcpClients);
 
                     if (result == null) continue;
 
@@ -261,6 +269,5 @@ namespace KK.Agent.Library.Agents
                 response.Choices?.Single().FinishReason = choice.FinishReason;
             }
         }
-
     }
 }

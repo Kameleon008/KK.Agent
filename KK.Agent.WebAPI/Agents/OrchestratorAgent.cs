@@ -15,7 +15,7 @@ namespace KK.Agent.WebAPI.Agents
         public OrchestratorAgent(OpenApiClient provider, AgentLogger logger, AgentHistory history, ConfigMcpServers mcp) : base(provider, logger, history, mcp)
         {
             this.AddToolInstance(new OrchestratorTools(logger, history, mcp));
-            this.AddMcpServer("filesystem");
+            this.AddMcpServer("test");
         }
     }
 }

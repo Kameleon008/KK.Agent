@@ -54,9 +54,6 @@ namespace KK.Agent.WebAPI.Controllers
             await client.Process.StandardInput.WriteLineAsync(json);
             await client.Process.StandardInput.FlushAsync();
 
-            await client.Process.StandardInput.WriteLineAsync(json);
-            await client.Process.StandardInput.FlushAsync();
-
             var buffer = new StringBuilder();
             while (true)
             {
