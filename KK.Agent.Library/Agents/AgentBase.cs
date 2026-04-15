@@ -38,7 +38,7 @@ namespace KK.Agent.Library.Agents
         {
             _handlers.Add(new FinishReasonHandlerStop());
             _handlers.Add(new FinishReasonHandlerLength());
-            _handlers.Add(new FinishReasonHandlerToolCalls(_tools, _logger));
+            _handlers.Add(new FinishReasonHandlerToolCalls(_tools, _logger, _mcpClients));
             _handlers.Add(new FinishReasonHandlerContentFilter());
         }
 
@@ -97,7 +97,7 @@ namespace KK.Agent.Library.Agents
 
                 var result = await _handlers
                     .Single(handler => handler.Handles(choice.FinishReason))
-                    .HandleAsync(AgentId, choice, history, this._mcpClients);
+                    .HandleAsync(AgentId, choice, history);
 
                 if (result == null)
                 {
@@ -130,7 +130,7 @@ namespace KK.Agent.Library.Agents
 
             var result = await _handlers
                 .Single(handler => handler.Handles(choice.FinishReason))
-                .HandleAsync(AgentId, choice, history, this._mcpClients);
+                .HandleAsync(AgentId, choice, history);
 
             return result == null ? null : JsonConvert.DeserializeObject<T>(result);
         }
@@ -184,7 +184,7 @@ namespace KK.Agent.Library.Agents
 
                     var result = await _handlers
                         .Single(h => h.Handles(synthesizedResponse.Choices.Single().FinishReason))
-                        .HandleAsync(AgentId, synthesizedResponse.Choices.Single(), history, this._mcpClients);
+                        .HandleAsync(AgentId, synthesizedResponse.Choices.Single(), history);
 
                     if (result == null) continue;
 
