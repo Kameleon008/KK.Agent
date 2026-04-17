@@ -2,7 +2,7 @@
 using System.Threading.Channels;
 using Newtonsoft.Json;
 
-namespace KK.Agent.Library.Agents
+namespace KK.Agent.Library.AgentEngine
 {
     public class AgentLogger
     {

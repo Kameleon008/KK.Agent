@@ -1,14 +1,9 @@
 ﻿using System.ComponentModel;
-using KK.Agent.Library;
-using KK.Agent.Library.Agents;
+using KK.Agent.Library.AgentEngine;
 using KK.Agent.Library.Attributes;
-using KK.Agent.Library.Clients.OpenApi;
-using KK.Agent.Library.Configuration;
-using KK.Agent.Library.Configuration.Models;
 using KK.Agent.Library.Mcp;
-using KK.Agent.WebAPI.Agents;
 
-namespace KK.Agent.WebAPI.Tools
+namespace KK.Agent.Library.Agents.Tools
 {
     public class OrchestratorTools(AgentLogger logger, AgentsFactory agentsFactory, ConfigMcpServers mcp)
     {

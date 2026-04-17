@@ -1,8 +1,8 @@
-﻿using KK.Agent.Library.Clients.OpenApi;
+﻿using KK.Agent.Library.Agents;
+using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Mcp;
-using KK.Agent.WebAPI.Agents;
 
-namespace KK.Agent.Library.Agents
+namespace KK.Agent.Library.AgentEngine
 {
     public class AgentsFactory(OpenApiClient llmProvider, AgentLogger logger, ConfigMcpServers mcpServers)
     {

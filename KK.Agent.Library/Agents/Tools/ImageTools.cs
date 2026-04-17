@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel;
-using KK.Agent.Library.Agents;
+using KK.Agent.Library.AgentEngine;
 using KK.Agent.Library.Attributes;
 
-namespace KK.Agent.WebAPI.Tools
+namespace KK.Agent.Library.Agents.Tools
 {
     public class ImageTools(AgentLogger logger)
     {

@@ -1,7 +1,7 @@
 using KK.Agent.Library.Clients.OpenApi.V1;
 using KK.Agent.Library.Mcp;
 
-namespace KK.Agent.Library.Agents.FinishReasonHandlers
+namespace KK.Agent.Library.AgentEngine.FinishReasonHandlers
 {
     public class FinishReasonHandlerToolCalls(Dictionary<string, Func<string, Task<string>>> tools, AgentLogger logger, List<McpClient> mcpClients) : IFinishReasonHandler
     {

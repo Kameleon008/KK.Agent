@@ -1,9 +1,9 @@
-﻿using KK.Agent.Library.Agents;
+﻿using KK.Agent.Library.AgentEngine;
+using KK.Agent.Library.Agents.Tools;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Mcp;
-using KK.Agent.WebAPI.Tools;
 
-namespace KK.Agent.WebAPI.Agents
+namespace KK.Agent.Library.Agents
 {
     public class HttpAgent : AgentBase
     {

@@ -1,7 +1,7 @@
-using KK.Agent.Library.Attributes;
 using System.ComponentModel;
+using KK.Agent.Library.Attributes;
 
-namespace KK.Agent.WebAPI.Tools;
+namespace KK.Agent.Library.Agents.Tools;
 
 /// <summary>
 /// A plugin that provides functionality to wait for a specified duration.

@@ -1,14 +1,14 @@
-﻿using KK.Agent.Library.Agents.FinishReasonHandlers;
+﻿using System.Text;
+using KK.Agent.Library.AgentEngine.FinishReasonHandlers;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Clients.OpenApi.V1;
 using KK.Agent.Library.Clients.OpenApi.V1.Builders;
 using KK.Agent.Library.Extensions;
+using KK.Agent.Library.Mcp;
 using KK.Agent.Library.Tools;
 using Newtonsoft.Json;
-using System.Text;
-using KK.Agent.Library.Mcp;
 
-namespace KK.Agent.Library.Agents
+namespace KK.Agent.Library.AgentEngine
 {
     public abstract class AgentBase
     {

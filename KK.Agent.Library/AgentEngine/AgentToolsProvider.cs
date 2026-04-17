@@ -1,7 +1,7 @@
 ﻿using KK.Agent.Library.Clients.OpenApi.V1;
 using KK.Agent.Library.Mcp;
 
-namespace KK.Agent.Library.Agents
+namespace KK.Agent.Library.AgentEngine
 {
     public class AgentToolsProvider
     {
