@@ -2,6 +2,7 @@
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Configuration;
 using KK.Agent.Library.Mcp;
+using KK.Agent.Library.Tools;
 using Microsoft.Extensions.Options;
 
 namespace KK.Agent.Library.AgentEngine
@@ -11,8 +12,6 @@ namespace KK.Agent.Library.AgentEngine
         public async Task<T> CreateAgentAsync<T>()
             where T : AgentBase
         {
-            await Task.Delay(100);
-
             var configuration = config.Value.Agents.FirstOrDefault(x => $"{x.Name}Agent" == typeof(T).Name);
 
             if (configuration == null)
@@ -21,7 +20,7 @@ namespace KK.Agent.Library.AgentEngine
             }
 
             var llmProvider = this.ConfigureLlmProvider(configuration);
-            var toolsProvider = this.ConfigureToolsProvider(configuration);
+            var toolsProvider = await this.ConfigureToolsProvider(configuration);
 
             if (typeof(OrchestratorAgent).IsAssignableFrom(typeof(T)))
             {
@@ -32,7 +31,7 @@ namespace KK.Agent.Library.AgentEngine
 
         }
 
-        private AgentToolsProvider ConfigureToolsProvider(ConfigAgent configuration)
+        private async Task<ToolsProvider> ConfigureToolsProvider(ConfigAgent configuration)
         {
             var mcp = new ConfigMcpServers
             {
@@ -44,7 +43,14 @@ namespace KK.Agent.Library.AgentEngine
                 }).ToList(),
             };
 
-            return new AgentToolsProvider(mcp);
+            var tools = configuration.Tools ?? [];
+
+            var toolsProvider = new ToolsProvider();
+
+            await toolsProvider.RegisterMcpTools(mcp);
+            toolsProvider.RegisterToolsFromNames(tools);
+
+            return toolsProvider;
         }
 
         private OpenApiClient ConfigureLlmProvider(ConfigAgent configuration)

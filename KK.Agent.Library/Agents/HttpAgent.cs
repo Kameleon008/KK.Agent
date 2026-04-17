@@ -1,6 +1,7 @@
 ﻿using KK.Agent.Library.AgentEngine;
 using KK.Agent.Library.Agents.Tools;
 using KK.Agent.Library.Clients.OpenApi;
+using KK.Agent.Library.Tools;
 
 namespace KK.Agent.Library.Agents
 {
@@ -10,10 +11,10 @@ namespace KK.Agent.Library.Agents
 
         protected override string AgentId { get; set; } = nameof(HttpAgent);
 
-        public HttpAgent(OpenApiClient provider, AgentToolsProvider tools, AgentLogger logger) : base(provider, tools, logger)
+        public HttpAgent(OpenApiClient client, ToolsProvider tools, AgentLogger logger) : base(client, tools, logger)
         {
-            this.AddToolInstance(new HttpClientTools());
-            this.AddToolInstance(new WaitingTools());
+            //this.AddToolInstance(new HttpClientTools());
+            //this.AddToolInstance(new WaitingTools());
         }
     }
 }

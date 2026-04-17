@@ -1,8 +1,9 @@
 using KK.Agent.Library.Clients.OpenApi.V1;
+using KK.Agent.Library.Tools;
 
 namespace KK.Agent.Library.AgentEngine.FinishReasonHandlers
 {
-    public class FinishReasonHandlerToolCalls(AgentToolsProvider toolsProvider, AgentLogger logger) : IFinishReasonHandler
+    public class FinishReasonHandlerToolCalls(ToolsProvider toolsProvider, AgentLogger logger) : IFinishReasonHandler
     {
         public bool Handles(string finishReason) => finishReason == "tool_calls";
 

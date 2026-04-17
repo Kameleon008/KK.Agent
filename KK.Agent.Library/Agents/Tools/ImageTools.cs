@@ -1,10 +1,9 @@
 ﻿using System.ComponentModel;
-using KK.Agent.Library.AgentEngine;
 using KK.Agent.Library.Attributes;
 
 namespace KK.Agent.Library.Agents.Tools
 {
-    public class ImageTools(AgentLogger logger)
+    public class ImageTools
     {
         private static readonly HttpClient HttpClient = new HttpClient();
 

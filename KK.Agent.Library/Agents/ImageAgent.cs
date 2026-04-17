@@ -1,6 +1,7 @@
 ﻿using KK.Agent.Library.AgentEngine;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Mcp;
+using KK.Agent.Library.Tools;
 
 namespace KK.Agent.Library.Agents
 {
@@ -12,7 +13,7 @@ namespace KK.Agent.Library.Agents
 
         private static readonly HttpClient HttpClient = new HttpClient();
 
-        public ImageAgent(OpenApiClient provider, AgentToolsProvider tools, AgentLogger logger) : base(provider, tools, logger)
+        public ImageAgent(OpenApiClient client, ToolsProvider tools, AgentLogger logger) : base(client, tools, logger)
         {
         }
 

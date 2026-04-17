@@ -3,49 +3,27 @@ using KK.Agent.Library.AgentEngine.FinishReasonHandlers;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Clients.OpenApi.V1;
 using KK.Agent.Library.Clients.OpenApi.V1.Builders;
-using KK.Agent.Library.Extensions;
 using KK.Agent.Library.Tools;
-using Newtonsoft.Json;
 
 namespace KK.Agent.Library.AgentEngine
 {
-    public abstract class AgentBase
+    public abstract class AgentBase(OpenApiClient client, ToolsProvider tools, AgentLogger logger)
     {
-        protected readonly OpenApiClient _provider;
+        protected readonly OpenApiClient _client = client;
+        protected readonly ToolsProvider _tools = tools;
+        protected readonly AgentLogger _logger = logger;
 
-        protected readonly List<IFinishReasonHandler> _handlers = [];
-        protected readonly AgentLogger _logger;
+        protected readonly List<IFinishReasonHandler> _handlers =
+        [
+            new FinishReasonHandlerStop(),
+            new FinishReasonHandlerLength(),
+            new FinishReasonHandlerToolCalls(tools, logger),
+            new FinishReasonHandlerContentFilter(),
+        ];
         
-        protected readonly AgentToolsProvider _tools;
-
         protected virtual string AgentId { get; set; } = Guid.NewGuid().ToString();
 
         protected virtual string SystemPrompt { get; set; } = "You are helpful AI assistant";
-
-        protected AgentBase(OpenApiClient provider, AgentToolsProvider tools, AgentLogger logger)
-        {
-            this._logger = logger;
-            this._provider = provider;
-            this._tools = tools;
-            this._handlers =
-            [
-                new FinishReasonHandlerStop(),
-                new FinishReasonHandlerLength(),
-                new FinishReasonHandlerToolCalls(tools, logger),
-                new FinishReasonHandlerContentFilter(),
-            ];
-        }
-
-        public void AddToolFromType<T>() where T : class, new()
-        {
-            var instance = new T();
-            RegisterTools(instance);
-        }
-
-        public void AddToolInstance(object toolInstance)
-        {
-            RegisterTools(toolInstance);
-        }
 
         public async Task<string> AskAgentAsync(ChatHistory history)
         {
@@ -54,12 +32,12 @@ namespace KK.Agent.Library.AgentEngine
             foreach (var _ in Enumerable.Range(0, 5))
             {
                 var request = new ChatCompletionsRequestBuilder()
-                    .SetModel(_provider.Model)
+                    .SetModel(_client.Model)
                     .SetMessages(history)
                     .SetTools(_tools.ToolDefinitions)
                     .Build();
 
-                var response = await _provider.GetChatCompletionsAsync(request);
+                var response = await _client.GetChatCompletionsAsync(request);
                 var choice = response.Choices.First();
 
                 history.AddMessage(choice);
@@ -79,32 +57,6 @@ namespace KK.Agent.Library.AgentEngine
             return "Iteration limit reached without final answer.";
         }
 
-        public async Task<T?> AskAgentAsync<T>(ChatHistory history)
-            where T : class, new()
-        {
-            InitializeChatHistory(history);
-
-            await this.AskAgentAsync(history);
-
-            var request = new ChatCompletionsRequestBuilder()
-                .SetModel(_provider.Model)
-                .SetMessages(history)
-                .SetTools(_tools.ToolDefinitions)
-                .SetJsonResponseFormat<T>()
-                .Build();
-
-            var response = await _provider.GetChatCompletionsAsync(request);
-            var choice = response.Choices.First();
-
-            history.AddMessage(choice);
-
-            var result = await _handlers
-                .Single(handler => handler.Handles(choice.FinishReason))
-                .HandleAsync(AgentId, choice, history);
-
-            return result == null ? null : JsonConvert.DeserializeObject<T>(result);
-        }
-
         public async Task<string> AskAgentStream(ChatHistory history)
         {
             InitializeChatHistory(history);
@@ -119,7 +71,7 @@ namespace KK.Agent.Library.AgentEngine
                 ChatCompletionsResponse? synthesizedResponse = null;
 
                 var request = new ChatCompletionsRequestBuilder()
-                    .SetModel(_provider.Model)
+                    .SetModel(_client.Model)
                     .SetMessages(history)
                     .SetTools(_tools.ToolDefinitions)
                     .SetStream(true)
@@ -127,7 +79,7 @@ namespace KK.Agent.Library.AgentEngine
 
                 var fullContent = new StringBuilder();
 
-                await foreach (var chunk in _provider.GetChatCompletionsStreamAsync(request))
+                await foreach (var chunk in _client.GetChatCompletionsStreamAsync(request))
                 {
                     var choice = chunk.Choices?.FirstOrDefault();
 
@@ -163,16 +115,6 @@ namespace KK.Agent.Library.AgentEngine
             }
 
             return "Iteration limit reached without final answer.";
-        }
-
-
-        private void RegisterTools(object instance)
-        {
-            var toolDefinitions = ToolDefinitionGenerator.GenerateFromObject(instance);
-            _tools.ToolDefinitions.AddRange(toolDefinitions);
-
-            var tools = ToolGenerator.GenerateFromObject(instance);
-            _tools.Tools.AddRange(tools);
         }
 
         private void InitializeChatHistory(ChatHistory history)

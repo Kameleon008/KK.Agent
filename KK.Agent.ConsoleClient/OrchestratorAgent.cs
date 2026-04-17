@@ -4,7 +4,7 @@ using KK.Agent.Library.Mcp;
 
 namespace KK.Agent.ConsoleClient
 {
-    public class OrchestratorAgent(OpenApiClient provider, AgentLogger logger, McpClient mcp) : AgentBase(provider, logger, mcp)
+    public class OrchestratorAgent(OpenApiClient client, AgentLogger logger, McpClient mcp) : AgentBase(client, logger, mcp)
     {
         protected override string SystemPrompt { get; set; } = string.Empty;
     }

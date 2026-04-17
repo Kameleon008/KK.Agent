@@ -2,6 +2,7 @@
 using KK.Agent.Library.Agents.Tools;
 using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Mcp;
+using KK.Agent.Library.Tools;
 
 namespace KK.Agent.Library.Agents
 {
@@ -11,9 +12,9 @@ namespace KK.Agent.Library.Agents
 
         protected override string AgentId { get; set; } = nameof(OrchestratorAgent);
 
-        public OrchestratorAgent(AgentsFactory agentsFactory, OpenApiClient provider, AgentToolsProvider tools, AgentLogger logger) : base(provider, tools, logger)
+        public OrchestratorAgent(AgentsFactory agentsFactory, OpenApiClient client, ToolsProvider tools, AgentLogger logger) : base(client, tools, logger)
         {
-            this.AddToolInstance(new OrchestratorTools(agentsFactory));
+            //this.AddToolInstance(new OrchestratorTools(agentsFactory));
         }
     }
 }
