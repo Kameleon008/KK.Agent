@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace KK.Agent.Library.AgentEngine
 {
-    public class AgentsFactory(OpenApiClient llmProvider, AgentLogger logger, IOptions<ConfigAgents> config)
+    public class AgentsFactory(AgentLogger logger, IOptions<ConfigAgents> config)
     {
         public async Task<T> CreateAgentAsync<T>()
             where T : AgentBase
@@ -20,15 +20,8 @@ namespace KK.Agent.Library.AgentEngine
                 throw new Exception($"No configuration found for agent type {typeof(T).Name}");
             }
 
-            var mcpServers = new ConfigMcpServers
-            {
-                Servers = configuration.McpServers.Select(x => new ConfigMcpServer()
-                {
-                    Arguments = x.Arguments,
-                    Command = x.Command,
-                    Name = x.Name
-                }).ToList(),
-            };
+            var mcpServers = this.ConfigureMcpServers(configuration);
+            var llmProvider = this.ConfigureOpenApiClient(configuration);
 
             if (typeof(OrchestratorAgent).IsAssignableFrom(typeof(T)))
             {
@@ -37,6 +30,24 @@ namespace KK.Agent.Library.AgentEngine
 
             return (T)Activator.CreateInstance(typeof(T), llmProvider, logger, mcpServers)!;
 
+        }
+
+        private ConfigMcpServers ConfigureMcpServers(ConfigAgent configuration)
+        {
+            return new ConfigMcpServers
+            {
+                Servers = configuration.McpServers.Select(x => new ConfigMcpServer()
+                {
+                    Arguments = x.Arguments,
+                    Command = x.Command,
+                    Name = x.Name
+                }).ToList(),
+            };
+        }
+
+        private OpenApiClient ConfigureOpenApiClient(ConfigAgent configuration)
+        {
+            return new OpenApiClient(configuration.OpenAPI);
         }
     }
 }

@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <Folder Include="NewFolder\" />
+    <Folder Include="Startup\" />
   </ItemGroup>
 
   <ItemGroup>

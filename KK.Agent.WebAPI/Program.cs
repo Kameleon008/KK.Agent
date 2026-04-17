@@ -1,11 +1,8 @@
 using KK.Agent.Library;
 using KK.Agent.Library.AgentEngine;
-using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Configuration;
 using KK.Agent.Library.Configuration.Models;
-using KK.Agent.Library.Mcp;
 using KK.Agent.WebAPI.Extensions;
-using KK.Agent.WebAPI.Startup;
 
 namespace KK.Agent.WebAPI;
 
@@ -15,10 +12,8 @@ public static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
-
         builder.Services.AddControllers();
-        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+        
         builder.Services.AddOpenApi();
 
         builder.Services.AddSingleton<ConfigProvider>(_ =>
@@ -44,24 +39,12 @@ public static class Program
         builder.Services.AddSingleton<ChatHistoryProvider>();
 
         builder.Services.AddScoped<AgentLogger>();
-        builder.Services.AddScoped<OpenApiClient>();
-
         builder.Services.AddScoped<AgentsFactory>();
-        builder.Services.AddMcpServers(builder.Configuration);
-
-        builder.Services.AddScoped(_ =>
-        {
-            var config = new ConfigMcpServers();
-            var section = builder.Configuration.GetSection(ConfigMcpServers.Name);
-            section.Bind(config.Servers);
-            return new McpClient(config.Servers.First());
-        });
 
         builder.Services.AddSingleton<IChatHistoryProvider, ChatHistoryProvider>();
 
         var app = builder.Build();
 
-        // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();

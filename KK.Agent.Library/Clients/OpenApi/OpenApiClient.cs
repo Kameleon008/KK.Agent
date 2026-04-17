@@ -1,13 +1,12 @@
-﻿using KK.Agent.Library.Clients.OpenApi.V1.Builders;
-using KK.Agent.Library.Clients.OpenApi.V1;
-using KK.Agent.Library.Configuration.Models;
+﻿using KK.Agent.Library.Clients.OpenApi.V1;
 using Newtonsoft.Json;
 using System.Runtime.CompilerServices;
 using System.Text;
+using KK.Agent.Library.Configuration;
 
 namespace KK.Agent.Library.Clients.OpenApi
 {
-    public class OpenApiClient(ConfigProvider configuration) : IChatCompletionsApiClient
+    public class OpenApiClient(OpenAPI configuration) : IChatCompletionsApiClient
     {
         private readonly HttpClient _httpClient = new()
         {
