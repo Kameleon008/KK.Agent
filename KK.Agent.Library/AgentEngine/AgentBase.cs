@@ -4,7 +4,6 @@ using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Clients.OpenApi.V1;
 using KK.Agent.Library.Clients.OpenApi.V1.Builders;
 using KK.Agent.Library.Extensions;
-using KK.Agent.Library.Mcp;
 using KK.Agent.Library.Tools;
 using Newtonsoft.Json;
 
@@ -17,32 +16,24 @@ namespace KK.Agent.Library.AgentEngine
         protected readonly List<IFinishReasonHandler> _handlers = [];
         protected readonly AgentLogger _logger;
         
-        protected readonly ConfigMcpServers _mcpServers;
-        protected readonly List<McpClient> _mcpClients = [];
-
-        protected readonly Dictionary<string, Func<string, Task<string>>> _tools = new();
-        protected readonly List<ToolDefinition> _toolDefinitions = [];
-        
-        protected readonly AgentToolsProvider _toolsProvider;
+        protected readonly AgentToolsProvider _tools;
 
         protected virtual string AgentId { get; set; } = Guid.NewGuid().ToString();
 
         protected virtual string SystemPrompt { get; set; } = "You are helpful AI assistant";
 
-        protected AgentBase(OpenApiClient provider, AgentLogger logger, ConfigMcpServers mcpServers)
+        protected AgentBase(OpenApiClient provider, AgentToolsProvider tools, AgentLogger logger)
         {
             this._logger = logger;
             this._provider = provider;
-            this._mcpServers = mcpServers;
+            this._tools = tools;
             this._handlers =
             [
                 new FinishReasonHandlerStop(),
                 new FinishReasonHandlerLength(),
-                new FinishReasonHandlerToolCalls(_tools, logger, _mcpClients),
+                new FinishReasonHandlerToolCalls(tools, logger),
                 new FinishReasonHandlerContentFilter(),
             ];
-
-            this._toolsProvider = new AgentToolsProvider();
         }
 
         public void AddToolFromType<T>() where T : class, new()
@@ -56,16 +47,6 @@ namespace KK.Agent.Library.AgentEngine
             RegisterTools(toolInstance);
         }
 
-        public void AddMcpServer(string name)
-        {
-            var config = this._mcpServers.Servers.SingleOrDefault(s => s.Name == name);
-            if (config != null)
-            {
-                var mcpClient = new McpClient(config);
-                _mcpClients.Add(mcpClient);
-            }
-        }
-
         public async Task<string> AskAgentAsync(ChatHistory history)
         {
             InitializeChatHistory(history);
@@ -75,7 +56,7 @@ namespace KK.Agent.Library.AgentEngine
                 var request = new ChatCompletionsRequestBuilder()
                     .SetModel(_provider.Model)
                     .SetMessages(history)
-                    .SetTools(_toolDefinitions)
+                    .SetTools(_tools.ToolDefinitions)
                     .Build();
 
                 var response = await _provider.GetChatCompletionsAsync(request);
@@ -108,7 +89,7 @@ namespace KK.Agent.Library.AgentEngine
             var request = new ChatCompletionsRequestBuilder()
                 .SetModel(_provider.Model)
                 .SetMessages(history)
-                .SetTools(_toolDefinitions)
+                .SetTools(_tools.ToolDefinitions)
                 .SetJsonResponseFormat<T>()
                 .Build();
 
@@ -128,9 +109,9 @@ namespace KK.Agent.Library.AgentEngine
         {
             InitializeChatHistory(history);
 
-            foreach (var client in this._mcpClients)
+            foreach (var client in _tools.McpClients)
             {
-                await client.LoadToolsAsync(this._toolDefinitions);
+                await client.LoadToolsAsync(_tools.ToolDefinitions);
             }
 
             foreach (var _ in Enumerable.Range(0, 5))
@@ -140,7 +121,7 @@ namespace KK.Agent.Library.AgentEngine
                 var request = new ChatCompletionsRequestBuilder()
                     .SetModel(_provider.Model)
                     .SetMessages(history)
-                    .SetTools(_toolDefinitions)
+                    .SetTools(_tools.ToolDefinitions)
                     .SetStream(true)
                     .Build();
 
@@ -188,10 +169,10 @@ namespace KK.Agent.Library.AgentEngine
         private void RegisterTools(object instance)
         {
             var toolDefinitions = ToolDefinitionGenerator.GenerateFromObject(instance);
-            _toolDefinitions.AddRange(toolDefinitions);
+            _tools.ToolDefinitions.AddRange(toolDefinitions);
 
             var tools = ToolGenerator.GenerateFromObject(instance);
-            _tools.AddRange(tools);
+            _tools.Tools.AddRange(tools);
         }
 
         private void InitializeChatHistory(ChatHistory history)

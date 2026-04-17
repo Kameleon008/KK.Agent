@@ -12,7 +12,7 @@ namespace KK.Agent.Library.Agents
 
         private static readonly HttpClient HttpClient = new HttpClient();
 
-        public ImageAgent(OpenApiClient provider, AgentLogger logger, ConfigMcpServers mcp) : base(provider, logger, mcp)
+        public ImageAgent(OpenApiClient provider, AgentToolsProvider tools, AgentLogger logger) : base(provider, tools, logger)
         {
         }
 

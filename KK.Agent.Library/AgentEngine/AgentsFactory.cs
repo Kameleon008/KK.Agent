@@ -20,21 +20,21 @@ namespace KK.Agent.Library.AgentEngine
                 throw new Exception($"No configuration found for agent type {typeof(T).Name}");
             }
 
-            var mcpServers = this.ConfigureMcpServers(configuration);
-            var llmProvider = this.ConfigureOpenApiClient(configuration);
+            var llmProvider = this.ConfigureLlmProvider(configuration);
+            var toolsProvider = this.ConfigureToolsProvider(configuration);
 
             if (typeof(OrchestratorAgent).IsAssignableFrom(typeof(T)))
             {
-                return (T)Activator.CreateInstance(typeof(T), this, llmProvider, logger, mcpServers)!;
+                return (T)Activator.CreateInstance(typeof(T), this, llmProvider, toolsProvider, logger)!;
             }
 
-            return (T)Activator.CreateInstance(typeof(T), llmProvider, logger, mcpServers)!;
+            return (T)Activator.CreateInstance(typeof(T), llmProvider, toolsProvider, logger)!;
 
         }
 
-        private ConfigMcpServers ConfigureMcpServers(ConfigAgent configuration)
+        private AgentToolsProvider ConfigureToolsProvider(ConfigAgent configuration)
         {
-            return new ConfigMcpServers
+            var mcp = new ConfigMcpServers
             {
                 Servers = configuration.McpServers.Select(x => new ConfigMcpServer()
                 {
@@ -43,9 +43,11 @@ namespace KK.Agent.Library.AgentEngine
                     Name = x.Name
                 }).ToList(),
             };
+
+            return new AgentToolsProvider(mcp);
         }
 
-        private OpenApiClient ConfigureOpenApiClient(ConfigAgent configuration)
+        private OpenApiClient ConfigureLlmProvider(ConfigAgent configuration)
         {
             return new OpenApiClient(configuration.OpenAPI);
         }

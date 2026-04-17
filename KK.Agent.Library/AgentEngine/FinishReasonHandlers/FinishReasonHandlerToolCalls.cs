@@ -1,9 +1,8 @@
 using KK.Agent.Library.Clients.OpenApi.V1;
-using KK.Agent.Library.Mcp;
 
 namespace KK.Agent.Library.AgentEngine.FinishReasonHandlers
 {
-    public class FinishReasonHandlerToolCalls(Dictionary<string, Func<string, Task<string>>> tools, AgentLogger logger, List<McpClient> mcpClients) : IFinishReasonHandler
+    public class FinishReasonHandlerToolCalls(AgentToolsProvider toolsProvider, AgentLogger logger) : IFinishReasonHandler
     {
         public bool Handles(string finishReason) => finishReason == "tool_calls";
 
@@ -13,9 +12,9 @@ namespace KK.Agent.Library.AgentEngine.FinishReasonHandlers
             {
                 await logger.PublishAsync("Tool_Call", $"{caller} calls tool: {toolCall.Function!.Name}..., arguments: {toolCall.Function.Arguments}", string.Empty);
 
-                if (tools.ContainsKey(toolCall.Function!.Name))
+                if (toolsProvider.Tools.ContainsKey(toolCall.Function!.Name))
                 {
-                    var result = await tools[toolCall.Function!.Name](toolCall.Function.Arguments);
+                    var result = await toolsProvider.Tools[toolCall.Function!.Name](toolCall.Function.Arguments);
 
                     await logger.PublishAsync("Tool_Call", $"{caller} calls tool: {toolCall.Function!.Name}..., result: {result}", string.Empty);
 
@@ -28,12 +27,12 @@ namespace KK.Agent.Library.AgentEngine.FinishReasonHandlers
                 }
                 else
                 {
-                    if (!mcpClients.Any())
+                    if (toolsProvider.McpClients.Any())
                     {
                         continue;
                     }
 
-                    var result = await mcpClients.First().CallToolAsync(toolCall.Function!.Name, toolCall.Function.Arguments);
+                    var result = await toolsProvider.McpClients.First().CallToolAsync(toolCall.Function!.Name, toolCall.Function.Arguments);
 
                     await logger.PublishAsync("Tool_Call_Result", $"\n result: {result}", string.Empty);
 

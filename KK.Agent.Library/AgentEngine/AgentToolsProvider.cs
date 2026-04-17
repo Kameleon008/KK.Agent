@@ -3,12 +3,12 @@ using KK.Agent.Library.Mcp;
 
 namespace KK.Agent.Library.AgentEngine
 {
-    public class AgentToolsProvider
+    public class AgentToolsProvider(ConfigMcpServers mcpServers)
     {
-        protected readonly List<ToolDefinition> _toolDefinitions = [];
-        protected readonly Dictionary<string, Func<string, Task<string>>> _tools = new();
+        public readonly List<ToolDefinition> ToolDefinitions = [];
+        public readonly Dictionary<string, Func<string, Task<string>>> Tools = new();
 
-        protected readonly List<McpClient> _mcpClients = [];
-        protected readonly ConfigMcpServers _mcpServers;
+        public readonly List<McpClient> McpClients = [];
+        public readonly ConfigMcpServers McpServers = mcpServers;
     }
 }

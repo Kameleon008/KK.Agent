@@ -16,13 +16,6 @@ public static class Program
         
         builder.Services.AddOpenApi();
 
-        builder.Services.AddSingleton<ConfigProvider>(_ =>
-        {
-            var config = new ConfigProvider();
-            builder.Configuration.GetSection("Provider").Bind(config);
-            return config;
-        });
-
         builder.Services.AddOptions<ConfigAgents>().Bind(builder.Configuration);
 
         builder.Services.AddCors(options =>
