@@ -11,9 +11,9 @@ namespace KK.Agent.Library.Agents
 
         protected override string AgentId { get; set; } = nameof(OrchestratorAgent);
 
-        public OrchestratorAgent(OpenApiClient provider, AgentsFactory agentsFactory, AgentLogger logger, ConfigMcpServers mcp) : base(provider, logger, mcp)
+        public OrchestratorAgent(AgentsFactory agentsFactory, OpenApiClient provider, AgentLogger logger, ConfigMcpServers mcp) : base(provider, logger, mcp)
         {
-            this.AddToolInstance(new OrchestratorTools(logger, agentsFactory, mcp));
+            this.AddToolInstance(new OrchestratorTools(agentsFactory));
             this.AddMcpServer("test");
         }
     }

@@ -1,6 +1,7 @@
 using KK.Agent.Library;
 using KK.Agent.Library.AgentEngine;
 using KK.Agent.Library.Clients.OpenApi;
+using KK.Agent.Library.Configuration;
 using KK.Agent.Library.Configuration.Models;
 using KK.Agent.Library.Mcp;
 using KK.Agent.WebAPI.Extensions;
@@ -26,6 +27,8 @@ public static class Program
             builder.Configuration.GetSection("Provider").Bind(config);
             return config;
         });
+
+        builder.Services.AddOptions<ConfigAgents>().Bind(builder.Configuration);
 
         builder.Services.AddCors(options =>
         {

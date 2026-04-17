@@ -1,11 +1,10 @@
 ﻿using System.ComponentModel;
 using KK.Agent.Library.AgentEngine;
 using KK.Agent.Library.Attributes;
-using KK.Agent.Library.Mcp;
 
 namespace KK.Agent.Library.Agents.Tools
 {
-    public class OrchestratorTools(AgentLogger logger, AgentsFactory agentsFactory, ConfigMcpServers mcp)
+    public class OrchestratorTools(AgentsFactory agentsFactory)
     {
         [AgentTool("Call http client agent to execute some http call")]
         public async Task<string> call_http_client_agent(

@@ -13,12 +13,16 @@ namespace KK.Agent.Library.AgentEngine
     public abstract class AgentBase
     {
         protected readonly OpenApiClient _provider;
-        protected readonly List<ToolDefinition> _toolDefinitions = [];
-        protected readonly Dictionary<string, Func<string, Task<string>>> _tools = new();
+
         protected readonly List<IFinishReasonHandler> _handlers = [];
         protected readonly AgentLogger _logger;
+        
         protected readonly ConfigMcpServers _mcpServers;
         protected readonly List<McpClient> _mcpClients = [];
+
+        protected readonly Dictionary<string, Func<string, Task<string>>> _tools = new();
+        protected readonly List<ToolDefinition> _toolDefinitions = [];
+        
         protected readonly AgentToolsProvider _toolsProvider;
 
         protected virtual string AgentId { get; set; } = Guid.NewGuid().ToString();
