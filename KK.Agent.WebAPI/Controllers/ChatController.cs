@@ -1,7 +1,7 @@
+using KK.Agent.Library;
 using KK.Agent.Library.Agents;
 using KK.Agent.WebAPI.Agents;
 using Microsoft.AspNetCore.Mvc;
-using KK.Agent.Library;
 
 namespace KK.Agent.WebAPI.Controllers
 {
@@ -10,32 +10,35 @@ namespace KK.Agent.WebAPI.Controllers
     public class ChatController : ControllerBase
     {
         [HttpPost]
-        public async Task<string> Chat([FromBody] ChatRequest request, OrchestratorAgent orchestrator, ChatHistoryProvider chatProvider, CancellationToken ct)
+        public async Task<string> Chat([FromBody] ChatRequest request, ChatHistoryProvider chatProvider, AgentsFactory factory, AgentLogger logger)
         {
+            var agent = await factory.CreateAgentAsync<OrchestratorAgent>();
+
             var chat = chatProvider.GetChatHistory(request.SessionId);
             chat.AddMessage("user", request.Message);
-            return await orchestrator.AskAgentAsync(chat);
+
+            return await agent.AskAgentAsync(chat);
         }
 
         [HttpPost]
         [Route("stream")]
-        public async Task ChatStream([FromBody] ChatRequest request, OrchestratorAgent orchestrator, ChatHistoryProvider chatProvider, AgentLogger logger)
+        public async Task ChatStream([FromBody] ChatRequest request, ChatHistoryProvider chatProvider, AgentsFactory factory, AgentLogger logger)
         {
             Response.ContentType = "text/event-stream";
 
-            var disconnectToken = HttpContext.RequestAborted;
+            var agent = await factory.CreateAgentAsync<OrchestratorAgent>();
 
             var chat = chatProvider.GetChatHistory(request.SessionId);
             chat.AddMessage("user", request.Message);
 
-            RunOrchestratorStreamAsync(chat, orchestrator, logger, disconnectToken);
+            RunOrchestratorStreamAsync(chat, agent, logger, HttpContext.RequestAborted);
 
             try
             {
-                await foreach (var log in logger.GetLogsAsync(disconnectToken))
+                await foreach (var log in logger.GetLogsAsync(HttpContext.RequestAborted))
                 {
-                    await Response.WriteAsync($"data: {log}\n\n", disconnectToken);
-                    await Response.Body.FlushAsync(disconnectToken);
+                    await Response.WriteAsync($"data: {log}\n\n", HttpContext.RequestAborted);
+                    await Response.Body.FlushAsync(HttpContext.RequestAborted);
                 }
             }
             catch (OperationCanceledException)
@@ -46,7 +49,7 @@ namespace KK.Agent.WebAPI.Controllers
 
         private static void RunOrchestratorStreamAsync(ChatHistory chat, OrchestratorAgent orchestrator, AgentLogger logger, CancellationToken disconnectToken)
         {
-            var _ = Task.Run(async () =>
+            Task.Run(async () =>
             {
                 await orchestrator.AskAgentStream(chat);
                 logger.Complete();

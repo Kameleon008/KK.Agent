@@ -43,7 +43,7 @@ public static class Program
         builder.Services.AddScoped<AgentLogger>();
         builder.Services.AddScoped<OpenApiClient>();
 
-        builder.Services.AddAgents();
+        builder.Services.AddScoped<AgentsFactory>();
         builder.Services.AddMcpServers(builder.Configuration);
 
         builder.Services.AddScoped(_ =>

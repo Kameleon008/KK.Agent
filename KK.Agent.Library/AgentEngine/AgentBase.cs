@@ -13,7 +13,6 @@ namespace KK.Agent.Library.Agents
     public abstract class AgentBase
     {
         protected readonly OpenApiClient _provider;
-        protected readonly ChatHistoryProvider _historyProvider;
         protected readonly List<ToolDefinition> _toolDefinitions = [];
         protected readonly Dictionary<string, Func<string, Task<string>>> _tools = new();
         protected readonly List<IFinishReasonHandler> _handlers = [];
@@ -26,11 +25,10 @@ namespace KK.Agent.Library.Agents
 
         protected virtual string SystemPrompt { get; set; } = "You are helpful AI assistant";
 
-        protected AgentBase(OpenApiClient provider, AgentLogger logger, ChatHistoryProvider historyProvider, ConfigMcpServers mcpServers)
+        protected AgentBase(OpenApiClient provider, AgentLogger logger, ConfigMcpServers mcpServers)
         {
             this._logger = logger;
             this._provider = provider;
-            this._historyProvider = historyProvider;
             this._mcpServers = mcpServers;
             this._handlers =
             [

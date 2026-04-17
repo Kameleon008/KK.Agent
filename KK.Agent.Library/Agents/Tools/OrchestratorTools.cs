@@ -10,18 +10,14 @@ using KK.Agent.WebAPI.Agents;
 
 namespace KK.Agent.WebAPI.Tools
 {
-    public class OrchestratorTools(AgentLogger logger, ChatHistoryProvider chatProvider, ConfigMcpServers mcp)
+    public class OrchestratorTools(AgentLogger logger, AgentsFactory agentsFactory, ConfigMcpServers mcp)
     {
         [AgentTool("Call http client agent to execute some http call")]
         public async Task<string> call_http_client_agent(
             [Description("description of task for agent")] string task)
         {
-            var sessionId = Guid.NewGuid().ToString();
-            var chat = chatProvider.GetChatHistory(sessionId);
-
-            var config = ConfigService.Get<ConfigRoot>();
-
-            var agent = new HttpAgent(new OpenApiClient(config.Provider), logger, chatProvider, mcp);
+            var chat = new ChatHistory();
+            var agent = await agentsFactory.CreateAgentAsync<HttpAgent>();
 
             chat.AddMessage("user", task);
 
@@ -34,22 +30,18 @@ namespace KK.Agent.WebAPI.Tools
             [Description("description of details of image on which agent should focus")] string focus,
             [Description("description of task for agent - main task")] string task)
         {
-            var config = ConfigService.Get<ConfigRoot>();
-
-            var agent = new ImageAgent(new OpenApiClient(config.Provider), logger, chatProvider, mcp);
-
             var prompt =
                 $"""
-                IMAGE URL: {url}
-                TASK TO DO: {task}
-                ADDITIONAL DETAILS AGENT SHOULD FOCUS ON: {focus}         
-                """;
+                 IMAGE URL: {url}
+                 TASK TO DO: {task}
+                 ADDITIONAL DETAILS AGENT SHOULD FOCUS ON: {focus}         
+                 """;
 
-            var sessionId = Guid.NewGuid().ToString();
-            var chat = chatProvider.GetChatHistory(sessionId);
+
+            var chat = new ChatHistory();
+            var agent = await agentsFactory.CreateAgentAsync<ImageAgent>();
 
             var image = await agent.FetchImageAsBase64Async(url);
-
             chat.AddImage("user", prompt, image);
 
             return await agent.AskAgentStream(chat);
