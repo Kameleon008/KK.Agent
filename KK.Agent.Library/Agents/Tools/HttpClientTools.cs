@@ -7,7 +7,7 @@ using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace KK.Agent.Library.Agents.Tools;
 
-public class HttpClientTools
+public class HttpClientTools(IServiceProvider provider)
 {
     private static readonly HttpClient HttpClient = new HttpClient();
 
@@ -21,7 +21,7 @@ public class HttpClientTools
             var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 
             using var response = await HttpClient.PostAsync(url, content);
-            string responseBody = await response.Content.ReadAsStringAsync();
+            var responseBody = await response.Content.ReadAsStringAsync();
 
             // Extract headers from response
             var headers = new Dictionary<string, string[]>();

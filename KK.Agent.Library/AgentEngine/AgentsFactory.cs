@@ -1,5 +1,4 @@
-﻿using KK.Agent.Library.Agents;
-using KK.Agent.Library.Clients.OpenApi;
+﻿using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Configuration;
 using KK.Agent.Library.Mcp;
 using KK.Agent.Library.Tools;
@@ -7,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace KK.Agent.Library.AgentEngine
 {
-    public class AgentsFactory(AgentLogger logger, IOptions<ConfigAgents> config)
+    public class AgentsFactory(AgentLogger logger, IServiceProvider provider ,IOptions<ConfigAgents> config)
     {
         public async Task<T> CreateAgentAsync<T>()
             where T : AgentBase
@@ -22,11 +21,6 @@ namespace KK.Agent.Library.AgentEngine
             var llmProvider = this.ConfigureLlmProvider(configuration);
             var toolsProvider = await this.ConfigureToolsProvider(configuration);
 
-            if (typeof(OrchestratorAgent).IsAssignableFrom(typeof(T)))
-            {
-                return (T)Activator.CreateInstance(typeof(T), this, llmProvider, toolsProvider, logger)!;
-            }
-
             return (T)Activator.CreateInstance(typeof(T), llmProvider, toolsProvider, logger)!;
 
         }
@@ -35,7 +29,7 @@ namespace KK.Agent.Library.AgentEngine
         {
             var mcp = new ConfigMcpServers
             {
-                Servers = configuration.McpServers.Select(x => new ConfigMcpServer()
+                Servers = configuration.McpServers.Select(x => new ConfigMcpServer
                 {
                     Arguments = x.Arguments,
                     Command = x.Command,
@@ -45,7 +39,7 @@ namespace KK.Agent.Library.AgentEngine
 
             var tools = configuration.Tools ?? [];
 
-            var toolsProvider = new ToolsProvider();
+            var toolsProvider = new ToolsProvider(provider);
 
             await toolsProvider.RegisterMcpTools(mcp);
             toolsProvider.RegisterToolsFromNames(tools);

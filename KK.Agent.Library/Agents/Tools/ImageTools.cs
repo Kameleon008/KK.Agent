@@ -3,7 +3,7 @@ using KK.Agent.Library.Attributes;
 
 namespace KK.Agent.Library.Agents.Tools
 {
-    public class ImageTools
+    public class ImageTools(IServiceProvider provider)
     {
         private static readonly HttpClient HttpClient = new HttpClient();
 

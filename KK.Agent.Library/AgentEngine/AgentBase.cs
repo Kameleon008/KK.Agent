@@ -9,11 +9,11 @@ namespace KK.Agent.Library.AgentEngine
 {
     public abstract class AgentBase(OpenApiClient client, ToolsProvider tools, AgentLogger logger)
     {
-        protected readonly OpenApiClient _client = client;
-        protected readonly ToolsProvider _tools = tools;
-        protected readonly AgentLogger _logger = logger;
+        protected readonly OpenApiClient Client = client;
+        protected readonly ToolsProvider Tools = tools;
+        protected readonly AgentLogger Logger = logger;
 
-        protected readonly List<IFinishReasonHandler> _handlers =
+        protected readonly List<IFinishReasonHandler> Handlers =
         [
             new FinishReasonHandlerStop(),
             new FinishReasonHandlerLength(),
@@ -32,17 +32,17 @@ namespace KK.Agent.Library.AgentEngine
             foreach (var _ in Enumerable.Range(0, 5))
             {
                 var request = new ChatCompletionsRequestBuilder()
-                    .SetModel(_client.Model)
+                    .SetModel(Client.Model)
                     .SetMessages(history)
-                    .SetTools(_tools.ToolDefinitions)
+                    .SetTools(Tools.ToolDefinitions)
                     .Build();
 
-                var response = await _client.GetChatCompletionsAsync(request);
+                var response = await Client.GetChatCompletionsAsync(request);
                 var choice = response.Choices.First();
 
                 history.AddMessage(choice);
 
-                var result = await _handlers
+                var result = await Handlers
                     .Single(handler => handler.Handles(choice.FinishReason))
                     .HandleAsync(AgentId, choice, history);
 
@@ -61,9 +61,9 @@ namespace KK.Agent.Library.AgentEngine
         {
             InitializeChatHistory(history);
 
-            foreach (var client in _tools.McpClients)
+            foreach (var client in Tools.McpClients)
             {
-                await client.LoadToolsAsync(_tools.ToolDefinitions);
+                await client.LoadToolsAsync(Tools.ToolDefinitions);
             }
 
             foreach (var _ in Enumerable.Range(0, 5))
@@ -71,15 +71,15 @@ namespace KK.Agent.Library.AgentEngine
                 ChatCompletionsResponse? synthesizedResponse = null;
 
                 var request = new ChatCompletionsRequestBuilder()
-                    .SetModel(_client.Model)
+                    .SetModel(Client.Model)
                     .SetMessages(history)
-                    .SetTools(_tools.ToolDefinitions)
+                    .SetTools(Tools.ToolDefinitions)
                     .SetStream(true)
                     .Build();
 
                 var fullContent = new StringBuilder();
 
-                await foreach (var chunk in _client.GetChatCompletionsStreamAsync(request))
+                await foreach (var chunk in Client.GetChatCompletionsStreamAsync(request))
                 {
                     var choice = chunk.Choices?.FirstOrDefault();
 
@@ -92,7 +92,7 @@ namespace KK.Agent.Library.AgentEngine
                     fullContent.Append(choice.Delta.ReasoningContent);
                     fullContent.Append(choice.Delta.Content);
 
-                    await _logger.PublishAsync(
+                    await Logger.PublishAsync(
                         agentId: AgentId,
                         reasoning: choice.Delta.ReasoningContent,
                         content: choice.Delta.Content);
@@ -104,7 +104,7 @@ namespace KK.Agent.Library.AgentEngine
                 {
                     history.AddMessage(synthesizedResponse.Choices.Single());
 
-                    var result = await _handlers
+                    var result = await Handlers
                         .Single(h => h.Handles(synthesizedResponse.Choices.Single().FinishReason))
                         .HandleAsync(AgentId, synthesizedResponse.Choices.Single(), history);
 

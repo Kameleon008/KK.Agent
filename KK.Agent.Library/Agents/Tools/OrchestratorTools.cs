@@ -1,17 +1,20 @@
 ﻿using System.ComponentModel;
 using KK.Agent.Library.AgentEngine;
 using KK.Agent.Library.Attributes;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace KK.Agent.Library.Agents.Tools
 {
-    public class OrchestratorTools(AgentsFactory agentsFactory)
+    public class OrchestratorTools(IServiceProvider provider)
     {
+        private readonly AgentsFactory _agentsFactory = provider.GetRequiredService<AgentsFactory>();
+
         [AgentTool("Call http client agent to execute some http call")]
         public async Task<string> call_http_client_agent(
             [Description("description of task for agent")] string task)
         {
             var chat = new ChatHistory();
-            var agent = await agentsFactory.CreateAgentAsync<HttpAgent>();
+            var agent = await _agentsFactory.CreateAgentAsync<HttpAgent>();
 
             chat.AddMessage("user", task);
 
@@ -33,7 +36,7 @@ namespace KK.Agent.Library.Agents.Tools
 
 
             var chat = new ChatHistory();
-            var agent = await agentsFactory.CreateAgentAsync<ImageAgent>();
+            var agent = await _agentsFactory.CreateAgentAsync<ImageAgent>();
 
             var image = await agent.FetchImageAsBase64Async(url);
             chat.AddImage("user", prompt, image);

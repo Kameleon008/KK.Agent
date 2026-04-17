@@ -4,23 +4,12 @@ using KK.Agent.Library.Mcp;
 
 namespace KK.Agent.Library.Tools
 {
-    public class ToolsProvider()
+    public class ToolsProvider(IServiceProvider provider)
     {
         public readonly List<ToolDefinition> ToolDefinitions = [];
         public readonly Dictionary<string, Func<string, Task<string>>> Tools = new();
 
         public readonly List<McpClient> McpClients = [];
-
-        public void AddToolFromType<T>() where T : class, new()
-        {
-            var instance = new T();
-            RegisterTools(instance);
-        }
-
-        public void AddToolInstance(object toolInstance)
-        {
-            RegisterTools(toolInstance);
-        }
 
         private void RegisterTools(object instance)
         {
@@ -41,7 +30,7 @@ namespace KK.Agent.Library.Tools
 
                 if (type == null) continue;
 
-                var instance = Activator.CreateInstance(type);
+                var instance = Activator.CreateInstance(type, provider);
 
                 if (instance == null) continue;
 
@@ -52,6 +41,7 @@ namespace KK.Agent.Library.Tools
         public async Task RegisterMcpTools(ConfigMcpServers mcpServers)
         {
             McpClients.AddRange(mcpServers.Clients);
+
             foreach (var client in McpClients)
             {
                 await client.LoadToolsAsync(ToolDefinitions);

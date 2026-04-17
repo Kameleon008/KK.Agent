@@ -1,21 +1,17 @@
 ﻿using KK.Agent.Library.AgentEngine;
 using KK.Agent.Library.Clients.OpenApi;
-using KK.Agent.Library.Mcp;
 using KK.Agent.Library.Tools;
 
 namespace KK.Agent.Library.Agents
 {
-    public class ImageAgent : AgentBase
+    public class ImageAgent(OpenApiClient client, ToolsProvider tools, AgentLogger logger)
+        : AgentBase(client, tools, logger)
     {
         protected override string SystemPrompt { get; set; } = File.ReadAllText($"./Agents/{nameof(ImageAgent)}.md");
 
         protected override string AgentId { get; set; } = nameof(ImageAgent);
 
         private static readonly HttpClient HttpClient = new HttpClient();
-
-        public ImageAgent(OpenApiClient client, ToolsProvider tools, AgentLogger logger) : base(client, tools, logger)
-        {
-        }
 
         public async Task<string> FetchImageAsBase64Async(string url)
         {

@@ -4,7 +4,7 @@ using KK.Agent.Library.Attributes;
 namespace KK.Agent.Library.Agents.Tools
 {
 
-    public class WaitingTools()
+    public class WaitingTools(IServiceProvider provider)
     {
         [AgentTool("Waits for the specified number of seconds and returns a confirmation message.")]
         public async Task<string> WaitAsync(
