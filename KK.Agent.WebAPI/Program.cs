@@ -38,7 +38,7 @@ public static class Program
             });
         });
 
-        builder.Services.AddSingleton<AgentHistory>();
+        builder.Services.AddSingleton<ChatHistoryProvider>();
 
         builder.Services.AddScoped<AgentLogger>();
         builder.Services.AddScoped<OpenApiClient>();
@@ -53,6 +53,8 @@ public static class Program
             section.Bind(config.Servers);
             return new McpClient(config.Servers.First());
         });
+
+        builder.Services.AddSingleton<IChatHistoryProvider, ChatHistoryProvider>();
 
         var app = builder.Build();
 

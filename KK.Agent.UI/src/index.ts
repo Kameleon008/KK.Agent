@@ -49,11 +49,11 @@ const createWindow = (): void => {
   const workArea = primaryDisplay.workAreaSize;
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: workArea.width,
-    height: workArea.height,
+    width: workArea.width/2,
+    height: workArea.height/2,
     x: primaryDisplay.bounds.x,
     y: primaryDisplay.bounds.y,
-    frame: false,
+    frame: true,
     fullscreen: false,
     fullscreenable: true,
     webPreferences: {

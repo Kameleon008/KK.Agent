@@ -5,6 +5,8 @@
         public static string Name = "McpServers";
 
         public List<ConfigMcpServer> Servers { get; set; } = [];
+
+        public List<McpClient> Clients => Servers.Select(server => new McpClient(server)).ToList();
     }
 
     public class ConfigMcpServer

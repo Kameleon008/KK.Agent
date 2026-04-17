@@ -10,21 +10,22 @@ using KK.Agent.WebAPI.Agents;
 
 namespace KK.Agent.WebAPI.Tools
 {
-    public class OrchestratorTools(AgentLogger logger, AgentHistory history, ConfigMcpServers mcp)
+    public class OrchestratorTools(AgentLogger logger, ChatHistoryProvider chatProvider, ConfigMcpServers mcp)
     {
         [AgentTool("Call http client agent to execute some http call")]
         public async Task<string> call_http_client_agent(
             [Description("description of task for agent")] string task)
         {
             var sessionId = Guid.NewGuid().ToString();
+            var chat = chatProvider.GetChatHistory(sessionId);
 
             var config = ConfigService.Get<ConfigRoot>();
 
-            var agent = new HttpAgent(new OpenApiClient(config.Provider), logger, history, mcp);
+            var agent = new HttpAgent(new OpenApiClient(config.Provider), logger, chatProvider, mcp);
 
-            agent.AddMessage("User", task);
+            chat.AddMessage("user", task);
 
-            return await agent.RunStreamAsync(sessionId);
+            return await agent.AskAgentStream(chat);
         }
 
         [AgentTool("Call image agent to describe some image")]
@@ -35,7 +36,7 @@ namespace KK.Agent.WebAPI.Tools
         {
             var config = ConfigService.Get<ConfigRoot>();
 
-            var agent = new ImageAgent(new OpenApiClient(config.Provider), logger, history, mcp);
+            var agent = new ImageAgent(new OpenApiClient(config.Provider), logger, chatProvider, mcp);
 
             var prompt =
                 $"""
@@ -45,11 +46,13 @@ namespace KK.Agent.WebAPI.Tools
                 """;
 
             var sessionId = Guid.NewGuid().ToString();
+            var chat = chatProvider.GetChatHistory(sessionId);
+
             var image = await agent.FetchImageAsBase64Async(url);
 
-            agent.AddImage("user", prompt, image, sessionId);
+            chat.AddImage("user", prompt, image);
 
-            return await agent.RunStreamAsync(sessionId);
+            return await agent.AskAgentStream(chat);
         }
     }
 }

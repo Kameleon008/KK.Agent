@@ -1,8 +1,9 @@
-﻿using KK.Agent.Library.Clients.OpenApi.V1;
+﻿using KK.Agent.Library.Clients;
+using KK.Agent.Library.Clients.OpenApi.V1;
 
 namespace KK.Agent.Library.Agents
 {
-    public class ChatHistory : List<object>
+    public class ChatHistory : List<IChatMessage>
     {
 
         public void AddMessage(string role, string content)

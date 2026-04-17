@@ -13,33 +13,34 @@ namespace KK.Agent.Library.Agents
     public abstract class AgentBase
     {
         protected readonly OpenApiClient _provider;
-        protected readonly AgentHistory _history;
+        protected readonly ChatHistoryProvider _historyProvider;
         protected readonly List<ToolDefinition> _toolDefinitions = [];
         protected readonly Dictionary<string, Func<string, Task<string>>> _tools = new();
         protected readonly List<IFinishReasonHandler> _handlers = [];
         protected readonly AgentLogger _logger;
         protected readonly ConfigMcpServers _mcpServers;
         protected readonly List<McpClient> _mcpClients = [];
+        protected readonly AgentToolsProvider _toolsProvider;
 
         protected virtual string AgentId { get; set; } = Guid.NewGuid().ToString();
 
         protected virtual string SystemPrompt { get; set; } = "You are helpful AI assistant";
 
-        protected AgentBase(OpenApiClient provider, AgentLogger logger, AgentHistory history, ConfigMcpServers mcpServers)
+        protected AgentBase(OpenApiClient provider, AgentLogger logger, ChatHistoryProvider historyProvider, ConfigMcpServers mcpServers)
         {
             this._logger = logger;
             this._provider = provider;
-            this._history = history;
+            this._historyProvider = historyProvider;
             this._mcpServers = mcpServers;
-            this.InitializeHandlers();
-        }
+            this._handlers =
+            [
+                new FinishReasonHandlerStop(),
+                new FinishReasonHandlerLength(),
+                new FinishReasonHandlerToolCalls(_tools, logger, _mcpClients),
+                new FinishReasonHandlerContentFilter(),
+            ];
 
-        private void InitializeHandlers()
-        {
-            _handlers.Add(new FinishReasonHandlerStop());
-            _handlers.Add(new FinishReasonHandlerLength());
-            _handlers.Add(new FinishReasonHandlerToolCalls(_tools, _logger, _mcpClients));
-            _handlers.Add(new FinishReasonHandlerContentFilter());
+            this._toolsProvider = new AgentToolsProvider();
         }
 
         public void AddToolFromType<T>() where T : class, new()
@@ -60,27 +61,12 @@ namespace KK.Agent.Library.Agents
             {
                 var mcpClient = new McpClient(config);
                 _mcpClients.Add(mcpClient);
-
-                //_ = LoadToolDefinitionsAsync(mcpClient);
             }
         }
 
-        public void AddMessage(string role, string message, string sessionId = "")
+        public async Task<string> AskAgentAsync(ChatHistory history)
         {
-            var history = _history.GetChatHistory(sessionId);
-            history.AddSystemMessage(SystemPrompt);
-            history.AddMessage(role, message);
-        }
-
-        public void AddImage(string role, string text, string imageBase64Encoded, string sessionId = "")
-        {
-            var history = _history.GetChatHistory(sessionId);
-            history.AddImage(role, SystemPrompt + text, imageBase64Encoded);
-        }
-
-        public async Task<string> RunAsync(string sessionId = "")
-        {
-            var history = _history.GetChatHistory(sessionId);
+            InitializeChatHistory(history);
 
             foreach (var _ in Enumerable.Range(0, 5))
             {
@@ -110,11 +96,12 @@ namespace KK.Agent.Library.Agents
             return "Iteration limit reached without final answer.";
         }
 
-        public async Task<T?> RunAsync<T>(string sessionId = "")
+        public async Task<T?> AskAgentAsync<T>(ChatHistory history)
             where T : class, new()
         {
-            var history = _history.GetChatHistory(sessionId);
-            await this.RunAsync(sessionId);
+            InitializeChatHistory(history);
+
+            await this.AskAgentAsync(history);
 
             var request = new ChatCompletionsRequestBuilder()
                 .SetModel(_provider.Model)
@@ -135,14 +122,14 @@ namespace KK.Agent.Library.Agents
             return result == null ? null : JsonConvert.DeserializeObject<T>(result);
         }
 
-        public async Task<string> RunStreamAsync(string sessionId = "")
+        public async Task<string> AskAgentStream(ChatHistory history)
         {
+            InitializeChatHistory(history);
+
             foreach (var client in this._mcpClients)
             {
                 await client.LoadToolsAsync(this._toolDefinitions);
             }
-
-            var history = _history.GetChatHistory(sessionId);
 
             foreach (var _ in Enumerable.Range(0, 5))
             {
@@ -205,6 +192,18 @@ namespace KK.Agent.Library.Agents
             _tools.AddRange(tools);
         }
 
+        private void InitializeChatHistory(ChatHistory history)
+        {
+            if (history.Any() is false)
+            {
+                history.AddSystemMessage(SystemPrompt);
+            }
+
+            if (history.First().Role != "system")
+            {
+                history.Insert(0, new ChatMessage { Role = "system", Content = SystemPrompt });
+            }
+        }
 
         protected static void UpdateChatCompletionsResponseFromChunk(ref ChatCompletionsResponse? response, ChatCompletionsChunk chunk)
         {

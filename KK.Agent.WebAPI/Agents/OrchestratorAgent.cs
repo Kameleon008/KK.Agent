@@ -12,9 +12,9 @@ namespace KK.Agent.WebAPI.Agents
 
         protected override string AgentId { get; set; } = nameof(OrchestratorAgent);
 
-        public OrchestratorAgent(OpenApiClient provider, AgentLogger logger, AgentHistory history, ConfigMcpServers mcp) : base(provider, logger, history, mcp)
+        public OrchestratorAgent(OpenApiClient provider, AgentLogger logger, ChatHistoryProvider historyProvider, ConfigMcpServers mcp) : base(provider, logger, historyProvider, mcp)
         {
-            this.AddToolInstance(new OrchestratorTools(logger, history, mcp));
+            this.AddToolInstance(new OrchestratorTools(logger, historyProvider, mcp));
             this.AddMcpServer("test");
         }
     }

@@ -4,7 +4,7 @@ using KK.Agent.Library.Mcp;
 
 namespace KK.Agent.Library.Examples.Agents
 {
-    public class ExampleAgent(OpenApiClient provider, AgentLogger logger, AgentHistory history, ConfigMcpServers mcp) : AgentBase(provider, logger, history, mcp)
+    public class ExampleAgent(OpenApiClient provider, AgentLogger logger, ChatHistoryProvider historyProvider, ConfigMcpServers mcp) : AgentBase(provider, logger, historyProvider, mcp)
     {
         protected override string SystemPrompt { get; set; } = string.Empty;
     }

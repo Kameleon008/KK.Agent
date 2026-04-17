@@ -1,10 +1,7 @@
 using KK.Agent.Library.Agents;
-using KK.Agent.Library.Mcp;
 using KK.Agent.WebAPI.Agents;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using System.Text;
-using System.Text.Json;
+using KK.Agent.Library;
 
 namespace KK.Agent.WebAPI.Controllers
 {
@@ -13,22 +10,25 @@ namespace KK.Agent.WebAPI.Controllers
     public class ChatController : ControllerBase
     {
         [HttpPost]
-        public async Task<string> Chat([FromBody] ChatRequest request, OrchestratorAgent orchestrator, CancellationToken ct)
+        public async Task<string> Chat([FromBody] ChatRequest request, OrchestratorAgent orchestrator, ChatHistoryProvider chatProvider, CancellationToken ct)
         {
-            orchestrator.AddMessage("user", request.Message, request.SessionId);
-            return await orchestrator.RunAsync(request.SessionId);
+            var chat = chatProvider.GetChatHistory(request.SessionId);
+            chat.AddMessage("user", request.Message);
+            return await orchestrator.AskAgentAsync(chat);
         }
 
         [HttpPost]
         [Route("stream")]
-        public async Task StreamChat([FromBody] ChatRequest request, OrchestratorAgent orchestrator, AgentLogger logger)
+        public async Task ChatStream([FromBody] ChatRequest request, OrchestratorAgent orchestrator, ChatHistoryProvider chatProvider, AgentLogger logger)
         {
             Response.ContentType = "text/event-stream";
 
             var disconnectToken = HttpContext.RequestAborted;
 
-            orchestrator.AddMessage("user", request.Message, request.SessionId);
-            RunOrchestratorStreamAsync(request, orchestrator, logger, disconnectToken);
+            var chat = chatProvider.GetChatHistory(request.SessionId);
+            chat.AddMessage("user", request.Message);
+
+            RunOrchestratorStreamAsync(chat, orchestrator, logger, disconnectToken);
 
             try
             {
@@ -44,38 +44,11 @@ namespace KK.Agent.WebAPI.Controllers
             }
         }
 
-        [HttpPost]
-        [Route("mcp")]
-        public async Task<string> McpStdioTest([FromBody] JsonElement request, McpClient client, AgentLogger logger)
-        {
-            client.Start();
-
-            var json = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(request.GetRawText()));
-            await client.Process.StandardInput.WriteLineAsync(json);
-            await client.Process.StandardInput.FlushAsync();
-
-            var buffer = new StringBuilder();
-            while (true)
-            {
-                var line = await client.Process.StandardOutput.ReadLineAsync();
-                Console.WriteLine(line);
-                if (line == null) break;
-
-                buffer.Append(line.Trim());
-                if (line.Trim().EndsWith("}")) break;
-            }
-
-            var response = buffer.ToString();
-            Console.WriteLine(response);
-
-            return response;
-        }
-
-        private static void RunOrchestratorStreamAsync(ChatRequest request, OrchestratorAgent orchestrator, AgentLogger logger, CancellationToken disconnectToken)
+        private static void RunOrchestratorStreamAsync(ChatHistory chat, OrchestratorAgent orchestrator, AgentLogger logger, CancellationToken disconnectToken)
         {
             var _ = Task.Run(async () =>
             {
-                await orchestrator.RunStreamAsync(request.SessionId);
+                await orchestrator.AskAgentStream(chat);
                 logger.Complete();
             }, disconnectToken);
         }

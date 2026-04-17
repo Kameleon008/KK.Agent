@@ -161,7 +161,7 @@ public class PropertyDefinition
     public string? Description { get; set; }
 }
 
-public class ChatImageMessage
+public class ChatImageMessage : IChatMessage
 {
 
     [JsonProperty("role", NullValueHandling = NullValueHandling.Ignore)]

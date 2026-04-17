@@ -18,7 +18,7 @@ namespace KK.Agent.ConsoleClient
             loreAgent.AddToolFromType<ExampleLoreTools>();
             loreAgent.AddToolFromType<ExamplePlanetaryDatabase>();
 
-            return await loreAgent.RunAsync(task);
+            return await loreAgent.AskAgentAsync(task);
         }
     }
 }

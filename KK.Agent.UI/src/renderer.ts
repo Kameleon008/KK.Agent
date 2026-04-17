@@ -22,7 +22,6 @@ const parseMarkdown = (text: string): string => {
 const messagesContainer = document.getElementById('messages') as HTMLElement;
 const messageInput = document.getElementById('messageInput') as HTMLTextAreaElement;
 const sendBtn = document.getElementById('sendBtn') as HTMLButtonElement;
-const statusDiv = document.getElementById('status') as HTMLElement;
 const promptDropdown = document.getElementById('promptDropdown') as HTMLDivElement;
 
 // Session management
@@ -208,8 +207,6 @@ function createNewSession() {
   
   // Clear all messages from the chat
   messagesContainer.innerHTML = '';
-  
-  statusDiv.textContent = `Nowa sesja utworzona: ${currentSessionId}`;
 }
 
 // Send message to the API endpoint
@@ -220,8 +217,7 @@ async function sendMessage() {
   // Clear input and disable button
   messageInput.value = '';
   sendBtn.disabled = true;
-  statusDiv.textContent = 'Connecting...';
-  
+
   try {
     addNewMessage('You', message, false);
     
@@ -254,7 +250,6 @@ async function sendMessage() {
   } catch (error) {
     console.error('Error:', error);
     addNewMessage('Error', `Failed to send message: ${error.message}`, true);
-    statusDiv.textContent = 'Ready';
     sendBtn.disabled = false;
   }
 }
@@ -264,8 +259,6 @@ async function handleStream(body: ReadableStream<Uint8Array>) {
   const reader = body.getReader();
   const decoder = new TextDecoder('utf-8');
   let buffer = ''; // Accumulate partial data here
-  
-  statusDiv.textContent = 'Receiving stream...';
   
   try {
     let done = false;
@@ -318,7 +311,6 @@ async function handleStream(body: ReadableStream<Uint8Array>) {
     }
     
     finalizeAgentMessage();
-    statusDiv.textContent = 'Stream completed';
   } catch (error) {
     console.error('Stream error:', error);
     addNewMessage('Error', `Stream failed: ${error.message}`, true);

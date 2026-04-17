@@ -13,9 +13,5 @@ namespace KK.Agent.Library.Clients
     public interface IChatMessage
     {
         public string Role { get; set; }
-
-        public string Content { get; set; }
-
-        public string? ToolCallId { get; set; }
     }
 }

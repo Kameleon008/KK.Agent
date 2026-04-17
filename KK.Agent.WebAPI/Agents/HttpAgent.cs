@@ -12,7 +12,7 @@ namespace KK.Agent.WebAPI.Agents
 
         protected override string AgentId { get; set; } = nameof(HttpAgent);
 
-        public HttpAgent(OpenApiClient provider, AgentLogger logger, AgentHistory history, ConfigMcpServers mcp) : base(provider, logger, history, mcp)
+        public HttpAgent(OpenApiClient provider, AgentLogger logger, ChatHistoryProvider historyProvider, ConfigMcpServers mcp) : base(provider, logger, historyProvider, mcp)
         {
             this.AddToolInstance(new HttpClientTools());
             this.AddToolInstance(new WaitingTools());

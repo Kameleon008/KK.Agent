@@ -17,7 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Agents\Tools\" />
     <Folder Include="Models\" />
     <Folder Include="Startup\" />
   </ItemGroup>

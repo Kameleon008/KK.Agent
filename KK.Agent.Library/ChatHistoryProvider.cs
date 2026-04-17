@@ -2,7 +2,7 @@
 
 namespace KK.Agent.Library
 {
-    public class AgentHistory
+    public class ChatHistoryProvider : IChatHistoryProvider
     {
         private readonly Dictionary<string, ChatHistory> _chats = new();
 
