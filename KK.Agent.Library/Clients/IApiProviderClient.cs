@@ -2,11 +2,13 @@
 
 namespace KK.Agent.Library.Clients
 {
-    public interface IChatCompletionsApiClient
+    public interface IApiProviderClient
     {
+        public string Model { get; }
+
         public Task<ChatCompletionsResponse> GetChatCompletionsAsync(ChatCompletionsRequest request, CancellationToken cancellationToken = default);
 
-        public IAsyncEnumerable<ChatCompletionsChunk> GetChatCompletionsStreamAsync(ChatCompletionsRequest request, CancellationToken cancellationToken);
+        public IAsyncEnumerable<ChatCompletionsChunk> GetChatCompletionsStreamAsync(ChatCompletionsRequest request, CancellationToken cancellationToken = default);
 
     }
 

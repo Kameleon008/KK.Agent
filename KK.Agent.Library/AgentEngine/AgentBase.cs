@@ -1,15 +1,15 @@
-﻿using System.Text;
-using KK.Agent.Library.AgentEngine.FinishReasonHandlers;
-using KK.Agent.Library.Clients.OpenApi;
+﻿using KK.Agent.Library.AgentEngine.FinishReasonHandlers;
+using KK.Agent.Library.Clients;
 using KK.Agent.Library.Clients.OpenApi.V1;
 using KK.Agent.Library.Clients.OpenApi.V1.Builders;
 using KK.Agent.Library.Tools;
+using System.Text;
 
 namespace KK.Agent.Library.AgentEngine
 {
-    public abstract class AgentBase(OpenApiClient client, ToolsProvider tools, AgentLogger logger)
+    public abstract class AgentBase(IApiProviderClient client, ToolsProvider tools, AgentLogger logger)
     {
-        protected readonly OpenApiClient Client = client;
+        protected readonly IApiProviderClient Client = client;
         protected readonly ToolsProvider Tools = tools;
         protected readonly AgentLogger Logger = logger;
 
@@ -87,7 +87,6 @@ namespace KK.Agent.Library.AgentEngine
                     {
                         continue;
                     }
-
 
                     fullContent.Append(choice.Delta.ReasoningContent);
                     fullContent.Append(choice.Delta.Content);

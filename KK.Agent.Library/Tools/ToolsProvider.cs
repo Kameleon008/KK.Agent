@@ -7,12 +7,14 @@ namespace KK.Agent.Library.Tools
     public class ToolsProvider(IServiceProvider provider)
     {
         public readonly List<ToolDefinition> ToolDefinitions = [];
-        public readonly Dictionary<string, Func<string, Task<string>>> Tools = new();
 
+        public readonly Dictionary<string, Func<string, Task<string>>> Tools = new();
         public readonly List<McpClient> McpClients = [];
 
-        private void RegisterTools(object instance)
+        private async Task RegisterTools(object instance)
         {
+            await Task.Delay(10);
+
             var toolDefinitions = ToolDefinitionGenerator.GenerateFromObject(instance);
             this.ToolDefinitions.AddRange(toolDefinitions);
 
@@ -20,7 +22,7 @@ namespace KK.Agent.Library.Tools
             this.Tools.AddRange(tools);
         }
 
-        public void RegisterToolsFromNames(List<string> toolNames)
+        public async Task RegisterToolsFromNames(List<string> toolNames)
         {
             var assembly = typeof(ToolsProvider).Assembly;
 
@@ -34,11 +36,11 @@ namespace KK.Agent.Library.Tools
 
                 if (instance == null) continue;
 
-                RegisterTools(instance);
+                await RegisterTools(instance);
             }
         }
 
-        public async Task RegisterMcpTools(ConfigMcpServers mcpServers)
+        public async Task RegisterToolsFromMcp(ConfigMcpServers mcpServers)
         {
             McpClients.AddRange(mcpServers.Clients);
 

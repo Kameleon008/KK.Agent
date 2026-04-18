@@ -2,11 +2,10 @@
 using Newtonsoft.Json;
 using System.Runtime.CompilerServices;
 using System.Text;
-using KK.Agent.Library.Configuration;
 
 namespace KK.Agent.Library.Clients.OpenApi
 {
-    public class OpenApiClient(OpenAPI configuration) : IChatCompletionsApiClient
+    public class OpenApiClient(Configuration.OpenApi configuration) : IApiProviderClient
     {
         private readonly HttpClient _httpClient = new()
         {

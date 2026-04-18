@@ -1,12 +1,13 @@
-﻿using KK.Agent.Library.Clients.OpenApi;
+﻿using KK.Agent.Library.Clients;
+using KK.Agent.Library.Clients.OpenApi;
 using KK.Agent.Library.Configuration;
-using KK.Agent.Library.Mcp;
+using KK.Agent.Library.Extensions;
 using KK.Agent.Library.Tools;
 using Microsoft.Extensions.Options;
 
 namespace KK.Agent.Library.AgentEngine
 {
-    public class AgentsFactory(AgentLogger logger, IServiceProvider provider ,IOptions<ConfigAgents> config)
+    public class AgentsFactory(AgentLogger logger, IServiceProvider provider, IOptions<ConfigAgents> config)
     {
         public async Task<T> CreateAgentAsync<T>()
             where T : AgentBase
@@ -27,29 +28,25 @@ namespace KK.Agent.Library.AgentEngine
 
         private async Task<ToolsProvider> ConfigureToolsProvider(ConfigAgent configuration)
         {
-            var mcp = new ConfigMcpServers
-            {
-                Servers = configuration.McpServers.Select(x => new ConfigMcpServer
-                {
-                    Arguments = x.Arguments,
-                    Command = x.Command,
-                    Name = x.Name
-                }).ToList(),
-            };
-
-            var tools = configuration.Tools ?? [];
+            var mcpServers = configuration.McpServers.AsConfigMcpServers();
+            var toolsNames = configuration.Tools;
 
             var toolsProvider = new ToolsProvider(provider);
 
-            await toolsProvider.RegisterMcpTools(mcp);
-            toolsProvider.RegisterToolsFromNames(tools);
+            await toolsProvider.RegisterToolsFromMcp(mcpServers);
+            await toolsProvider.RegisterToolsFromNames(toolsNames);
 
             return toolsProvider;
         }
 
-        private OpenApiClient ConfigureLlmProvider(ConfigAgent configuration)
+        private IApiProviderClient ConfigureLlmProvider(ConfigAgent configuration)
         {
-            return new OpenApiClient(configuration.OpenAPI);
+            if (configuration is { OpenApi: not null })
+            {
+                return new OpenApiClient(configuration.OpenApi);
+            }
+
+            throw new Exception("Unprocessable LLM Provider");
         }
     }
 }

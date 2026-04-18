@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace KK.Agent.Library.Configuration;
+﻿namespace KK.Agent.Library.Configuration;
 
 public class ConfigAgents
 {
@@ -13,14 +11,14 @@ public class ConfigAgent
 
     public string ProviderType { get; set; } = string.Empty;
 
-    public OpenAPI OpenAPI { get; set; } = new();
+    public OpenApi? OpenApi { get; set; } = new();
 
     public List<string> Tools { get; set; } = [];
 
     public List<McpServer> McpServers { get; set; } = [];
 }
 
-public class OpenAPI
+public class OpenApi
 {
     public string Model { get; set; } = string.Empty;
 
