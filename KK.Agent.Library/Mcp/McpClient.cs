@@ -29,6 +29,11 @@ public class McpClient(ConfigMcpServer options)
             UseShellExecute = options.UseShellExecute
         };
 
+        foreach (var kv in options.EnvironmentVariables)
+        {
+            psi.Environment[kv.Key] = kv.Value;
+        }
+
         if (!string.IsNullOrEmpty(options.WorkingDirectory))
         {
             psi.WorkingDirectory = options.WorkingDirectory;

@@ -1,4 +1,6 @@
-﻿namespace KK.Agent.Library.Mcp
+﻿using System.Collections.Specialized;
+
+namespace KK.Agent.Library.Mcp
 {
     public class ConfigMcpServers
     {
@@ -16,7 +18,9 @@
         public string Command { get; set; } = string.Empty;
 
         public string Arguments { get; set; } = string.Empty;
-        
+
+        public Dictionary<string,string> EnvironmentVariables { get; set; } = new ();
+
         public string? WorkingDirectory { get; set; }
         
         public bool UseShellExecute { get; set; } = false;

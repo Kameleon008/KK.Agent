@@ -11,6 +11,7 @@ namespace KK.Agent.Library.Extensions
             {
                 Servers = mcpServers.Select(x => new ConfigMcpServer
                 {
+                    EnvironmentVariables = x.EnvironmentVariables,
                     Arguments = x.Arguments,
                     Command = x.Command,
                     Name = x.Name

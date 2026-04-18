@@ -34,4 +34,6 @@ public class McpServer
     public string Command { get; set; } = string.Empty;
 
     public string Arguments { get; set; } = string.Empty;
+
+    public Dictionary<string, string> EnvironmentVariables { get; set; } = new ();
 }
