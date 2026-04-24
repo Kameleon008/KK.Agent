@@ -11,10 +11,6 @@ public class McpClient(ConfigMcpServer options)
 
     public Process? Process;
 
-    public StreamWriter? Input => Process?.StandardInput;
-
-    public StreamReader? Output => Process?.StandardOutput;
-
     public List<McpTool> Tools { get; private set; } = [];
 
     public void Start()
@@ -47,21 +43,28 @@ public class McpClient(ConfigMcpServer options)
     {
         this.Start();
 
-        var request = new
+        if (this.Process == null )
         {
-            jsonrpc = "2.0",
-            id = 1,
-            method = "tools/list"
+            return;
+        }
+
+        var request = new McpToolCallRequest
+        {
+            JsonRpc = "2.0",
+            Id = 1,
+            Method = "tools/list"
         };
 
         var json = JsonConvert.SerializeObject(request);
-        await this.Input.WriteLineAsync(json);
-        await this.Input.FlushAsync();
+
+        await this.Process.StandardInput.WriteLineAsync(json);
+        await this.Process.StandardInput.FlushAsync();
 
         var buffer = new StringBuilder();
         while (true)
         {
-            var line = await this.Output.ReadLineAsync();
+            var line = await this.Process.StandardOutput.ReadLineAsync();
+
             Console.WriteLine(line);
             if (line == null) break;
 
@@ -93,9 +96,30 @@ public class McpClient(ConfigMcpServer options)
 
     public async Task<string> CallToolAsync(string toolName, string arguments)
     {
-        var json = $"{{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{{\"name\":\"{toolName}\",\"arguments\":{arguments}}}}}";
+        var argumentsObj = arguments != "{}" && !string.IsNullOrEmpty(arguments)
+            ? JsonConvert.DeserializeObject<Dictionary<string, object?>>(arguments)
+            : new Dictionary<string, object?>();
+
+        var request = new McpToolCallRequest
+        {
+            JsonRpc = "2.0",
+            Id = 1,
+            Method = "tools/call",
+            Params = new McpToolCallParams
+            {
+                Name = toolName,
+                Arguments = argumentsObj
+            }
+        };
+
+        var json = JsonConvert.SerializeObject(request);
 
         this.Start();
+
+        if (this.Process == null)
+        {
+            return  $"Error: Failed to start MCP process for tool {toolName}";
+        }
 
         await this.Process.StandardInput.WriteLineAsync(json);
         await this.Process.StandardInput.FlushAsync();
@@ -117,6 +141,30 @@ public class McpClient(ConfigMcpServer options)
         return response;
     }
 
+
+    private class McpToolCallRequest
+    {
+        [JsonProperty("jsonrpc")]
+        public string JsonRpc { get; set; } = "2.0";
+
+        [JsonProperty("id")]
+        public int Id { get; set; } = 1;
+
+        [JsonProperty("method")]
+        public string Method { get; set; } = "tools/call";
+
+        [JsonProperty("params", NullValueHandling = NullValueHandling.Ignore)]
+        public McpToolCallParams? Params { get; set; }
+    }
+
+    private class McpToolCallParams
+    {
+        [JsonProperty("name")]
+        public string Name { get; set; } = null!;
+
+        [JsonProperty("arguments")]
+        public Dictionary<string, object?>? Arguments { get; set; }
+    }
 
     private class McpResponse
     {
