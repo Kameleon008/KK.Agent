@@ -171,9 +171,6 @@ function appendToAgentMessage(agentId: string, text: string, isReasoning = false
   if (pendingContent) {
     section.span.innerHTML = parseMarkdown(pendingContent.rawText);
   }
-  
-  // Scroll to bottom
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
 // Render markdown for all pending content in a message (for finalization)

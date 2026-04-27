@@ -10,6 +10,7 @@ namespace KK.Agent.Library.AgentEngine
 
         public async Task PublishAsync(string agentId, string reasoning, string content)
         {
+            Console.WriteLine($"[AgentLogger] AgentId: {agentId}, Reasoning: {reasoning}, Content: {content}");
             await _channel.Writer.WriteAsync(new AgentLoggerModel
             {
                 AgentId = agentId,

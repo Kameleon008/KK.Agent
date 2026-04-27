@@ -66,7 +66,7 @@ namespace KK.Agent.Library.AgentEngine
                 await client.LoadToolsAsync(Tools.ToolDefinitions);
             }
 
-            foreach (var _ in Enumerable.Range(0, 5))
+            foreach (var _ in Enumerable.Range(0, 100))
             {
                 ChatCompletionsResponse? synthesizedResponse = null;
 

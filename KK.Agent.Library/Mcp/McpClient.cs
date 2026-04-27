@@ -9,7 +9,7 @@ public class McpClient(ConfigMcpServer options)
 {
     public string Name => options.Name;
 
-    public Process? Process;
+    private Process? _process;
 
     public List<McpTool> Tools { get; private set; } = [];
 
@@ -35,15 +35,15 @@ public class McpClient(ConfigMcpServer options)
             psi.WorkingDirectory = options.WorkingDirectory;
         }
 
-        Process = new Process { StartInfo = psi };
-        Process.Start();
+        _process = new Process { StartInfo = psi };
+        _process.Start();
     }
 
     public async Task LoadToolsAsync(List<ToolDefinition> tools)
     {
         this.Start();
 
-        if (this.Process == null )
+        if (this._process == null )
         {
             return;
         }
@@ -57,13 +57,13 @@ public class McpClient(ConfigMcpServer options)
 
         var json = JsonConvert.SerializeObject(request);
 
-        await this.Process.StandardInput.WriteLineAsync(json);
-        await this.Process.StandardInput.FlushAsync();
+        await this._process.StandardInput.WriteLineAsync(json);
+        await this._process.StandardInput.FlushAsync();
 
         var buffer = new StringBuilder();
         while (true)
         {
-            var line = await this.Process.StandardOutput.ReadLineAsync();
+            var line = await this._process.StandardOutput.ReadLineAsync();
 
             Console.WriteLine(line);
             if (line == null) break;
@@ -116,18 +116,18 @@ public class McpClient(ConfigMcpServer options)
 
         this.Start();
 
-        if (this.Process == null)
+        if (this._process == null)
         {
             return  $"Error: Failed to start MCP process for tool {toolName}";
         }
 
-        await this.Process.StandardInput.WriteLineAsync(json);
-        await this.Process.StandardInput.FlushAsync();
+        await this._process.StandardInput.WriteLineAsync(json);
+        await this._process.StandardInput.FlushAsync();
 
         var buffer = new StringBuilder();
         while (true)
         {
-            var line = await this.Process.StandardOutput.ReadLineAsync();
+            var line = await this._process.StandardOutput.ReadLineAsync();
             Console.WriteLine(line);
             if (line == null) break;
 
