@@ -21,6 +21,18 @@ namespace KK.Agent.Library.Agents.Tools
             return await agent.AskAgentStream(chat);
         }
 
+        [AgentTool("Call sensors agent to execute some operations and task related to sensors")]
+        public async Task<string> call_sensors_agent(
+            [Description("description of task for agent")] string task)
+        {
+            var chat = new ChatHistory();
+            var agent = await _agentsFactory.CreateAgentAsync<SensorsAgent>();
+
+            chat.AddMessage("user", task);
+
+            return await agent.AskAgentStream(chat);
+        }
+
         [AgentTool("Call image agent to describe some image")]
         public async Task<string> call_image_agent(
             [Description("url of image to describe")] string url,

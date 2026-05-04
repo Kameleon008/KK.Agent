@@ -28,7 +28,7 @@ namespace KK.Agent.Library.AgentEngine.FinishReasonHandlers
                 }
                 else
                 {
-                    if (toolsProvider.McpClients.Any())
+                    if (toolsProvider.McpClients.Any() == false)
                     {
                         continue;
                     }
