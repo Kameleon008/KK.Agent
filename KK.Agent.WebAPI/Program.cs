@@ -1,7 +1,6 @@
-using KK.Agent.Library;
-using KK.Agent.Library.AgentEngine;
-using KK.Agent.Library.Configuration;
-using KK.Agent.Library.Configuration.Models;
+using KK.Agent.Common;
+using KK.Agent.Common.AgentEngine;
+using KK.Agent.Common.Configuration;
 using KK.Agent.WebAPI.Extensions;
 
 namespace KK.Agent.WebAPI;

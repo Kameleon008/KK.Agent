@@ -1,8 +1,8 @@
 using System.Reflection;
-using KK.Agent.Library.Attributes;
-using KK.Agent.Library.Clients.OpenApi.V1;
+using KK.Agent.Common.Attributes;
+using KK.Agent.Common.Clients.OpenApi.V1;
 
-namespace KK.Agent.Library.Tools
+namespace KK.Agent.Common.Tools
 {
     public static class ToolDefinitionGenerator
     {

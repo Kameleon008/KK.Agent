@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
-using KK.Agent.Library.Attributes;
+using KK.Agent.Common.Attributes;
 
-namespace KK.Agent.Library.Agents.Tools
+namespace KK.Agent.Common.Agents.Tools
 {
     public class ImageTools(IServiceProvider provider)
     {

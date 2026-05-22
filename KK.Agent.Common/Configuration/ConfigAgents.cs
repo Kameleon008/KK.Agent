@@ -1,4 +1,4 @@
-﻿namespace KK.Agent.Library.Configuration;
+﻿namespace KK.Agent.Common.Configuration;
 
 public class ConfigAgents
 {

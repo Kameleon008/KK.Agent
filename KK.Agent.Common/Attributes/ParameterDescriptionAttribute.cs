@@ -1,4 +1,4 @@
-﻿namespace KK.Agent.Library.Attributes;
+﻿namespace KK.Agent.Common.Attributes;
 
 [AttributeUsage(AttributeTargets.Parameter)]
 public class ParameterDescriptionAttribute(string description) : Attribute

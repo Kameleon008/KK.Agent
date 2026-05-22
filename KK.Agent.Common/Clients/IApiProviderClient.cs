@@ -1,6 +1,6 @@
-﻿using KK.Agent.Library.Clients.OpenApi.V1;
+﻿using KK.Agent.Common.Clients.OpenApi.V1;
 
-namespace KK.Agent.Library.Clients
+namespace KK.Agent.Common.Clients
 {
     public interface IApiProviderClient
     {

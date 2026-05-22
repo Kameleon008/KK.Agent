@@ -1,6 +1,6 @@
-using KK.Agent.Library.Clients.OpenApi.V1;
+using KK.Agent.Common.Clients.OpenApi.V1;
 
-namespace KK.Agent.Library.AgentEngine.FinishReasonHandlers
+namespace KK.Agent.Common.AgentEngine.FinishReasonHandlers
 {
     public class FinishReasonHandlerLength : IFinishReasonHandler
     {

@@ -1,7 +1,7 @@
-﻿using KK.Agent.Library.Configuration;
-using KK.Agent.Library.Mcp;
+﻿using KK.Agent.Common.Configuration;
+using KK.Agent.Common.Mcp;
 
-namespace KK.Agent.Library.Extensions
+namespace KK.Agent.Common.Extensions
 {
     public static class ConfigurationExtensions
     {

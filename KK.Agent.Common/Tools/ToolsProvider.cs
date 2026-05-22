@@ -1,8 +1,8 @@
-﻿using KK.Agent.Library.Clients.OpenApi.V1;
-using KK.Agent.Library.Extensions;
-using KK.Agent.Library.Mcp;
+﻿using KK.Agent.Common.Clients.OpenApi.V1;
+using KK.Agent.Common.Extensions;
+using KK.Agent.Common.Mcp;
 
-namespace KK.Agent.Library.Tools
+namespace KK.Agent.Common.Tools
 {
     public class ToolsProvider(IServiceProvider provider)
     {

@@ -1,10 +1,9 @@
-using KK.Agent.Library.Attributes;
-using Newtonsoft.Json;
-using System.Linq;
 using System.Reflection;
 using System.Text;
+using KK.Agent.Common.Attributes;
+using Newtonsoft.Json;
 
-namespace KK.Agent.Library.Clients.OpenApi.V1.Builders
+namespace KK.Agent.Common.Clients.OpenApi.V1.Builders
 {
     public class ChatCompletionsRequestBuilder
     {

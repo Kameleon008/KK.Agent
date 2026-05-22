@@ -1,6 +1,6 @@
-﻿using KK.Agent.Library.Attributes;
+﻿using KK.Agent.Common.Attributes;
 
-namespace KK.Agent.Library.Tools
+namespace KK.Agent.Common.Tools
 {
     public static class ToolGenerator
     {

@@ -1,5 +1,5 @@
 ﻿
-namespace KK.Agent.Library.AgentEngine
+namespace KK.Agent.Common.AgentEngine
 {
     public class AgentBuilder<TAgent>
     where TAgent : AgentBase, new ()

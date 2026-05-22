@@ -1,7 +1,7 @@
 using System.Reflection;
 using Newtonsoft.Json;
 
-namespace KK.Agent.Library.Tools
+namespace KK.Agent.Common.Tools
 {
     public static class ToolDelegateFactory
     {

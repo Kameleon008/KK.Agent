@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
-using KK.Agent.Library.Clients.OpenApi.V1;
+using KK.Agent.Common.Clients.OpenApi.V1;
+using Newtonsoft.Json;
 
-namespace KK.Agent.Library.Mcp;
+namespace KK.Agent.Common.Mcp;
 
 public class McpClient(ConfigMcpServer options)
 {

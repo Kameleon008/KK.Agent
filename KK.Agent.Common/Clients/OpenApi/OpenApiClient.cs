@@ -1,9 +1,9 @@
-﻿using KK.Agent.Library.Clients.OpenApi.V1;
-using Newtonsoft.Json;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Text;
+using KK.Agent.Common.Clients.OpenApi.V1;
+using Newtonsoft.Json;
 
-namespace KK.Agent.Library.Clients.OpenApi
+namespace KK.Agent.Common.Clients.OpenApi
 {
     public class OpenApiClient(Configuration.OpenApi configuration) : IApiProviderClient
     {

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 
-namespace KK.Agent.Library.Configuration;
+namespace KK.Agent.Common.Configuration;
 
 public static class ConfigService
 {

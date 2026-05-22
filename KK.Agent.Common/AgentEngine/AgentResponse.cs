@@ -1,4 +1,4 @@
-﻿namespace KK.Agent.Library.AgentEngine
+﻿namespace KK.Agent.Common.AgentEngine
 {
     public class AgentResponse<T>(string agent, T response, ChatHistory history)
         where T : class

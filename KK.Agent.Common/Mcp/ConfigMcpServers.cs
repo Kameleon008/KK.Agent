@@ -1,6 +1,4 @@
-﻿using System.Collections.Specialized;
-
-namespace KK.Agent.Library.Mcp
+﻿namespace KK.Agent.Common.Mcp
 {
     public class ConfigMcpServers
     {

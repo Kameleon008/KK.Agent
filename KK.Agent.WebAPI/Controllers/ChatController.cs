@@ -1,6 +1,6 @@
-using KK.Agent.Library;
-using KK.Agent.Library.AgentEngine;
-using KK.Agent.Library.Agents;
+using KK.Agent.Common;
+using KK.Agent.Common.AgentEngine;
+using KK.Agent.Common.Agents;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KK.Agent.WebAPI.Controllers

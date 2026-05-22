@@ -1,6 +1,6 @@
-﻿using KK.Agent.Library.AgentEngine;
+﻿using KK.Agent.Common.AgentEngine;
 
-namespace KK.Agent.Library
+namespace KK.Agent.Common
 {
     public interface IChatHistoryProvider
     {

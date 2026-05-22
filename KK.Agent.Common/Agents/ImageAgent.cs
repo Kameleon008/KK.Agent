@@ -1,9 +1,9 @@
-﻿using KK.Agent.Library.AgentEngine;
-using KK.Agent.Library.Clients.OpenApi;
-using KK.Agent.Library.Configuration;
-using KK.Agent.Library.Tools;
+﻿using KK.Agent.Common.AgentEngine;
+using KK.Agent.Common.Clients.OpenApi;
+using KK.Agent.Common.Configuration;
+using KK.Agent.Common.Tools;
 
-namespace KK.Agent.Library.Agents
+namespace KK.Agent.Common.Agents
 {
     public class ImageAgent(OpenApiClient client, ToolsProvider tools, ConfigAgent configuration, AgentLogger logger)
         : AgentBase(client, tools, configuration, logger)

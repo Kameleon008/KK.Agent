@@ -1,11 +1,11 @@
-﻿using KK.Agent.Library.Clients;
-using KK.Agent.Library.Clients.OpenApi;
-using KK.Agent.Library.Configuration;
-using KK.Agent.Library.Extensions;
-using KK.Agent.Library.Tools;
+﻿using KK.Agent.Common.Clients;
+using KK.Agent.Common.Clients.OpenApi;
+using KK.Agent.Common.Configuration;
+using KK.Agent.Common.Extensions;
+using KK.Agent.Common.Tools;
 using Microsoft.Extensions.Options;
 
-namespace KK.Agent.Library.AgentEngine
+namespace KK.Agent.Common.AgentEngine
 {
     public class AgentsFactory(AgentLogger logger, IServiceProvider provider, IOptions<ConfigAgents> config)
     {

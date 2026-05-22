@@ -1,4 +1,4 @@
-﻿namespace KK.Agent.Library.Extensions
+﻿namespace KK.Agent.Common.Extensions
 {
     public static class DictionaryExtensions
     {

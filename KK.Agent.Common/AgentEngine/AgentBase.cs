@@ -1,12 +1,12 @@
-﻿using KK.Agent.Library.AgentEngine.FinishReasonHandlers;
-using KK.Agent.Library.Clients;
-using KK.Agent.Library.Clients.OpenApi.V1;
-using KK.Agent.Library.Clients.OpenApi.V1.Builders;
-using KK.Agent.Library.Tools;
-using System.Text;
-using KK.Agent.Library.Configuration;
+﻿using System.Text;
+using KK.Agent.Common.AgentEngine.FinishReasonHandlers;
+using KK.Agent.Common.Clients;
+using KK.Agent.Common.Clients.OpenApi.V1;
+using KK.Agent.Common.Clients.OpenApi.V1.Builders;
+using KK.Agent.Common.Configuration;
+using KK.Agent.Common.Tools;
 
-namespace KK.Agent.Library.AgentEngine
+namespace KK.Agent.Common.AgentEngine
 {
     public abstract class AgentBase(IApiProviderClient client, ToolsProvider tools, ConfigAgent configuration, AgentLogger logger)
     {

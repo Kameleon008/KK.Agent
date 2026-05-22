@@ -1,4 +1,4 @@
-﻿namespace KK.Agent.Library.Attributes
+﻿namespace KK.Agent.Common.Attributes
 {
     [AttributeUsage(AttributeTargets.Method)]
     public sealed class AgentToolAttribute(string description) : Attribute

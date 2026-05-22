@@ -1,7 +1,7 @@
-using KK.Agent.Library.Clients.OpenApi.V1;
-using KK.Agent.Library.Tools;
+using KK.Agent.Common.Clients.OpenApi.V1;
+using KK.Agent.Common.Tools;
 
-namespace KK.Agent.Library.AgentEngine.FinishReasonHandlers
+namespace KK.Agent.Common.AgentEngine.FinishReasonHandlers
 {
     public class FinishReasonHandlerToolCalls(ToolsProvider toolsProvider, AgentLogger logger) : IFinishReasonHandler
     {

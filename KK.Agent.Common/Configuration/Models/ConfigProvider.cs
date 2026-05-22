@@ -1,4 +1,4 @@
-﻿namespace KK.Agent.Library.Configuration.Models
+﻿namespace KK.Agent.Common.Configuration.Models
 {
     public class ConfigProvider
     {

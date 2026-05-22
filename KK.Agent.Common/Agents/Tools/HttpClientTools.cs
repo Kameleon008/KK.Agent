@@ -1,11 +1,9 @@
 using System.ComponentModel;
-using System.Net;
 using System.Text;
-using KK.Agent.Library.Attributes;
-using Newtonsoft.Json;
+using KK.Agent.Common.Attributes;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
-namespace KK.Agent.Library.Agents.Tools;
+namespace KK.Agent.Common.Agents.Tools;
 
 public class HttpClientTools(IServiceProvider provider)
 {
