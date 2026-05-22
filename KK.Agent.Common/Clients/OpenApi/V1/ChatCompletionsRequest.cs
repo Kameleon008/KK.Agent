@@ -17,6 +17,9 @@ public class ChatCompletionsRequest
     [JsonProperty("response_format", NullValueHandling = NullValueHandling.Ignore)]
     public ChatCompletionResponseFormat? ResponseFormat { get; set; }
 
+    [JsonProperty("reasoning_effort", NullValueHandling = NullValueHandling.Ignore)]
+    public string? ReasoningEffort { get; set; }
+
     [JsonProperty("temperature", NullValueHandling = NullValueHandling.Ignore)]
     public double? Temperature { get; set; }
 

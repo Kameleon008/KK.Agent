@@ -36,6 +36,12 @@ namespace KK.Agent.Library.Clients.OpenApi.V1.Builders
             return this;
         }
 
+        public ChatCompletionsRequestBuilder SetReasoningEffort(string reasoningEffort)
+        {
+            _request.ReasoningEffort = reasoningEffort;
+            return this;
+        }
+
         public ChatCompletionsRequestBuilder SetTemperature(double temperature)
         {
             _request.Temperature = temperature;

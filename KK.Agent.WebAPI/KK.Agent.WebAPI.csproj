@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -12,12 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\KK.Agent.Library\KK.Agent.Library.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="NewFolder\" />
-    <Folder Include="Startup\" />
+    <ProjectReference Include="..\KK.Agent.Common\KK.Agent.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

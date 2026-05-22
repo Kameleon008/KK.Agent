@@ -22,7 +22,7 @@ namespace KK.Agent.Library.AgentEngine
             var llmProvider = this.ConfigureLlmProvider(configuration);
             var toolsProvider = await this.ConfigureToolsProvider(configuration);
 
-            return (T)Activator.CreateInstance(typeof(T), llmProvider, toolsProvider, logger)!;
+            return (T)Activator.CreateInstance(typeof(T), llmProvider, toolsProvider, configuration, logger)!;
 
         }
 

@@ -4,10 +4,11 @@ using KK.Agent.Library.Clients.OpenApi.V1;
 using KK.Agent.Library.Clients.OpenApi.V1.Builders;
 using KK.Agent.Library.Tools;
 using System.Text;
+using KK.Agent.Library.Configuration;
 
 namespace KK.Agent.Library.AgentEngine
 {
-    public abstract class AgentBase(IApiProviderClient client, ToolsProvider tools, AgentLogger logger)
+    public abstract class AgentBase(IApiProviderClient client, ToolsProvider tools, ConfigAgent configuration, AgentLogger logger)
     {
         protected readonly IApiProviderClient Client = client;
         protected readonly ToolsProvider Tools = tools;
@@ -35,6 +36,8 @@ namespace KK.Agent.Library.AgentEngine
                     .SetModel(Client.Model)
                     .SetMessages(history)
                     .SetTools(Tools.ToolDefinitions)
+                    .SetTemperature(configuration.Temperature)
+                    .SetReasoningEffort(configuration.ReasoningEffort)
                     .Build();
 
                 var response = await Client.GetChatCompletionsAsync(request);
@@ -75,6 +78,8 @@ namespace KK.Agent.Library.AgentEngine
                     .SetMessages(history)
                     .SetTools(Tools.ToolDefinitions)
                     .SetStream(true)
+                    .SetTemperature(configuration.Temperature)
+                    .SetReasoningEffort(configuration.ReasoningEffort)
                     .Build();
 
                 var fullContent = new StringBuilder();

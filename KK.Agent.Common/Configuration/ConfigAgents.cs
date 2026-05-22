@@ -11,6 +11,10 @@ public class ConfigAgent
 
     public string ProviderType { get; set; } = string.Empty;
 
+    public string ReasoningEffort { get; set; } = "low";
+
+    public double Temperature { get; set; } = 0.7;
+
     public OpenApi? OpenApi { get; set; } = new();
 
     public List<string> Tools { get; set; } = [];
