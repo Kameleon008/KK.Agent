@@ -35,23 +35,15 @@ namespace KK.Agent.Common.Agents.Tools
 
         [AgentTool("Call image agent to describe some image")]
         public async Task<string> call_image_agent(
-            [Description("url of image to describe")] string url,
-            [Description("description of details of image on which agent should focus")] string focus,
-            [Description("description of task for agent - main task")] string task)
+            [Description("description of task for agent")] string task)
         {
-            var prompt =
-                $"""
-                 IMAGE URL: {url}
-                 TASK TO DO: {task}
-                 ADDITIONAL DETAILS AGENT SHOULD FOCUS ON: {focus}         
-                 """;
-
-
             var chat = new ChatHistory();
             var agent = await _agentsFactory.CreateAgentAsync<ImageAgent>();
 
-            var image = await agent.FetchImageAsBase64Async(url);
-            chat.AddImage("user", prompt, image);
+            //var image = await agent.FetchImageAsBase64Async(url);
+            //chat.AddImage("user", task, image);
+
+            chat.AddMessage("user", task);
 
             return await agent.AskAgentStream(chat);
         }

@@ -60,21 +60,24 @@ namespace KK.Agent.Common.Clients.OpenApi
         {
             var body = request.ToHttpContent();
 
-            var result = await this._httpClient.PostAsync("/v1/chat/completions", body, cancelationToken);
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/v1/chat/completions") { Content = body };
 
-            var x = await result.Content.ReadAsStringAsync(cancelationToken);
+            var response = await _httpClient.SendAsync(httpRequest, cancelationToken);
 
-            return JsonConvert.DeserializeObject<ChatCompletionsResponse>(x);
+            var content = await response.Content.ReadAsStringAsync(cancelationToken);
+
+            var result = JsonConvert.DeserializeObject<ChatCompletionsResponse>(content);
+
+            return result ?? throw new Exception("ChatCompletionsResponse - invalid deserialization");
         }
 
         public async IAsyncEnumerable<ChatCompletionsChunk> GetChatCompletionsStreamAsync(ChatCompletionsRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var body = request.ToHttpContent();
 
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/v1/chat/completions") { Content = body };
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, "/v1/chat/completions") { Content = body };
 
-            // 1. Get headers only
-            using var response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            var response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
             if (response.IsSuccessStatusCode == false)
             {
@@ -82,8 +85,6 @@ namespace KK.Agent.Common.Clients.OpenApi
                 throw new Exception($"Request failed with status code {response.StatusCode}: {result}");
             }
 
-
-            // 2. Open the stream
             await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             using var reader = new StreamReader(stream);
 
@@ -102,10 +103,7 @@ namespace KK.Agent.Common.Clients.OpenApi
                 var json = line.Substring(6);
                 var chunk = JsonConvert.DeserializeObject<ChatCompletionsChunk>(json);
 
-                if (chunk != null)
-                {
-                    yield return chunk;
-                }
+                yield return chunk ?? throw new Exception("ChatCompletionsResponse - invalid deserialization");
             }
         }
     }

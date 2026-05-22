@@ -41,7 +41,7 @@ namespace KK.Agent.Common.AgentEngine
                     .Build();
 
                 var response = await Client.GetChatCompletionsAsync(request);
-                var choice = response.Choices.First();
+                var choice = response.Choices.Single();
 
                 history.AddMessage(choice);
 
