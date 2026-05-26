@@ -14,7 +14,7 @@ namespace KK.Agent.Common.AgentEngine
     {
         public async Task<CustomAgent> CreateAgentAsync(string name)
         {
-            var filePath = Path.Combine(AppContext.BaseDirectory, "Prompts", $"{name}.md");
+            var filePath = Path.Combine(AppContext.BaseDirectory, "Agents", $"{name}.md");
 
             if (!File.Exists(filePath))
             {

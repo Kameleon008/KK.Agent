@@ -1,3 +1,17 @@
+---
+Name: ImageAgent
+Description: Responsible for describe image content
+ProviderType: OpenAPI
+ReasoningEffort: low
+Temperature: 0.8
+OpenApi:
+  Model: qwen/qwen3.5-35b-a3b
+  Endpoint: http://localhost:1234/v1
+Tools:
+  - ImageTools
+McpServers: []
+---
+
 # Role
 
 You are an IMAGE DESCRIBER.

@@ -26,7 +26,7 @@ namespace KK.Agent.WebAPI.Controllers
         {
             Response.ContentType = "text/event-stream";
 
-            var agent = await factory.CreateAgentAsync<OrchestratorAgent>();
+            var agent = await factory.CreateAgentAsync("OrchestratorAgent");
 
             var chat = chatProvider.GetChatHistory(request.SessionId);
             chat.AddMessage("user", request.Message);
@@ -47,7 +47,7 @@ namespace KK.Agent.WebAPI.Controllers
             }
         }
 
-        private static void RunOrchestratorStreamAsync(ChatHistory chat, OrchestratorAgent orchestrator, AgentLogger logger, CancellationToken disconnectToken)
+        private static void RunOrchestratorStreamAsync(ChatHistory chat, CustomAgent orchestrator, AgentLogger logger, CancellationToken disconnectToken)
         {
             Task.Run(async () =>
             {

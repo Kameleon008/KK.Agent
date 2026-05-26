@@ -10,49 +10,7 @@ namespace KK.Agent.Common.Agents.Tools
 {
     public class OrchestratorTools(IServiceProvider provider)
     {
-        private class AgentMetadata
-        {
-            public string Name { get; set; } = string.Empty;
-            public string Description { get; set; } = string.Empty;
-        }
-
         private readonly AgentsFactory _agentsFactory = provider.GetRequiredService<AgentsFactory>();
-
-        [AgentTool("Orchestrate task to Agent responsible for execute http calls")]
-        public async Task<string> orchestrate_task_to_agent_network_operator(
-            [Description("description of task for agent")] string task)
-        {
-            var chat = new ChatHistory();
-            var agent = await _agentsFactory.CreateAgentAsync<HttpAgent>();
-
-            chat.AddMessage("user", task);
-
-            return await agent.AskAgentStream(chat);
-        }
-
-        [AgentTool("Orchestrate task to Agent responsible for some operations and task related to sensors")]
-        public async Task<string> orchestrate_task_to_sensors_operator(
-            [Description("description of task for agent")] string task)
-        {
-            var chat = new ChatHistory();
-            var agent = await _agentsFactory.CreateAgentAsync<SensorsAgent>();
-
-            chat.AddMessage("user", task);
-
-            return await agent.AskAgentStream(chat);
-        }
-
-        [AgentTool("Orchestrate task to Agent responsible for Image management")]
-        public async Task<string> orchestrate_task_to_image_operator(
-            [Description("description of task for agent")] string task)
-        {
-            var chat = new ChatHistory();
-            var agent = await _agentsFactory.CreateAgentAsync<ImageAgent>();
-
-            chat.AddMessage("user", task);
-
-            return await agent.AskAgentStream(chat);
-        }
 
         [AgentTool("List available Agents")]
         public async Task<string> list_available_agents()
@@ -63,7 +21,7 @@ namespace KK.Agent.Common.Agents.Tools
                 .Build();
 
             var sb = new StringBuilder();
-            var markdownFiles = Directory.GetFiles("./Prompts", "*.md");
+            var markdownFiles = Directory.GetFiles("./Agents", "*.md");
 
             foreach (var filePath in markdownFiles)
             {
@@ -120,6 +78,12 @@ namespace KK.Agent.Common.Agents.Tools
             var length = endIndex - startIndex;
 
             return fileContent.Substring(startIndex, length).Trim();
+        }
+
+        public record AgentMetadata
+        {
+            public string Name { get; set; } = string.Empty;
+            public string Description { get; set; } = string.Empty;
         }
     }
 }

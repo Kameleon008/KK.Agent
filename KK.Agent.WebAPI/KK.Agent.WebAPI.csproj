@@ -28,7 +28,7 @@
     <None Update="Agents\OrchestratorAgent.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Prompts\TranslationAgent.md">
+    <None Update="Agents\TranslationAgent.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

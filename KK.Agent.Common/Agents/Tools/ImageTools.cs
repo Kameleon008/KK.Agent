@@ -30,7 +30,7 @@ namespace KK.Agent.Common.Agents.Tools
             [Description("description of task for agent")] string task)
         {
             var chat = new ChatHistory();
-            var agent = await _agentsFactory.CreateAgentAsync<ImageAgent>();
+            var agent = await _agentsFactory.CreateAgentAsync("ImageAgent");
 
             var image = await FetchImageAsBase64Async(url);
             chat.AddImage("user", task, image);
