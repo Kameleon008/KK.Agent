@@ -9,8 +9,8 @@ namespace KK.Agent.Common.Agents.Tools
     {
         private readonly AgentsFactory _agentsFactory = provider.GetRequiredService<AgentsFactory>();
 
-        [AgentTool("Call http client agent to execute some http call")]
-        public async Task<string> call_http_client_agent(
+        [AgentTool("Orchestrate task to Agent responsible for execute http calls")]
+        public async Task<string> orchestrate_task_to_agent_network_operator(
             [Description("description of task for agent")] string task)
         {
             var chat = new ChatHistory();
@@ -21,8 +21,8 @@ namespace KK.Agent.Common.Agents.Tools
             return await agent.AskAgentStream(chat);
         }
 
-        [AgentTool("Call sensors agent to execute some operations and task related to sensors")]
-        public async Task<string> call_sensors_agent(
+        [AgentTool("Orchestrate task to Agent responsible for some operations and task related to sensors")]
+        public async Task<string> orchestrate_task_to_sensors_operator(
             [Description("description of task for agent")] string task)
         {
             var chat = new ChatHistory();
@@ -33,15 +33,12 @@ namespace KK.Agent.Common.Agents.Tools
             return await agent.AskAgentStream(chat);
         }
 
-        [AgentTool("Call image agent to describe some image")]
-        public async Task<string> call_image_agent(
+        [AgentTool("Orchestrate task to Agent responsible for Image management")]
+        public async Task<string> orchestrate_task_to_image_operator(
             [Description("description of task for agent")] string task)
         {
             var chat = new ChatHistory();
             var agent = await _agentsFactory.CreateAgentAsync<ImageAgent>();
-
-            //var image = await agent.FetchImageAsBase64Async(url);
-            //chat.AddImage("user", task, image);
 
             chat.AddMessage("user", task);
 
