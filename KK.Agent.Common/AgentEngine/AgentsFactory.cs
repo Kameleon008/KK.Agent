@@ -25,10 +25,10 @@ namespace KK.Agent.Common.AgentEngine
             var configuration = ParseFrontMatter<ConfigAgent>(fileContent);
             var prompt = ExtractMarkdownBody(fileContent);
 
-            var llmProvider = this.ConfigureLlmProvider(configuration);
+            var llmProvider = ConfigureLlmProvider(configuration);
             var toolsProvider = await this.ConfigureToolsProvider(configuration);
 
-            return new CustomAgent(name, prompt, llmProvider, toolsProvider, configuration, logger)!;
+            return new CustomAgent(name, prompt, llmProvider, toolsProvider, configuration, logger);
 
         }
 
@@ -42,7 +42,7 @@ namespace KK.Agent.Common.AgentEngine
                 throw new Exception($"No configuration found for agent type {typeof(T).Name}");
             }
 
-            var llmProvider = this.ConfigureLlmProvider(configuration);
+            var llmProvider = ConfigureLlmProvider(configuration);
             var toolsProvider = await this.ConfigureToolsProvider(configuration);
 
             return (T)Activator.CreateInstance(typeof(T), llmProvider, toolsProvider, configuration, logger)!;
@@ -62,19 +62,16 @@ namespace KK.Agent.Common.AgentEngine
             return toolsProvider;
         }
 
-        private IApiProviderClient ConfigureLlmProvider(ConfigAgent configuration)
+        private static IApiProviderClient ConfigureLlmProvider(ConfigAgent configuration)
         {
-            if (configuration is { OpenApi: not null })
-            {
-                return new OpenApiClient(configuration.OpenApi);
-            }
-
-            throw new Exception("Unprocessable LLM Provider");
+            return configuration is { OpenApi: not null } 
+                ? new OpenApiClient(configuration.OpenApi) 
+                : throw new Exception("Unprocessable LLM Provider");
         }
 
-        private TConfig ParseFrontMatter<TConfig>(string fileContent)
+        private static TConfig ParseFrontMatter<TConfig>(string fileContent)
         {
-            var parts = fileContent.Split(new[] { "---" }, StringSplitOptions.RemoveEmptyEntries);
+            var parts = fileContent.Split(["---"], StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0)
             {
                 throw new Exception("Invalid Markdown format. Missing Front Matter data block.");
@@ -90,9 +87,9 @@ namespace KK.Agent.Common.AgentEngine
             return result;
         }
 
-        private string ExtractMarkdownBody(string fileContent)
+        private static string ExtractMarkdownBody(string fileContent)
         {
-            var parts = fileContent.Split(new[] { "---" }, StringSplitOptions.RemoveEmptyEntries);
+            var parts = fileContent.Split(["---"], StringSplitOptions.RemoveEmptyEntries);
             return parts.Length > 1 ? parts[1].Trim() : fileContent.Trim();
         }
     }
