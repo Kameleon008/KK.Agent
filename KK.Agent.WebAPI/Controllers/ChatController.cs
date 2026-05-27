@@ -12,7 +12,7 @@ namespace KK.Agent.WebAPI.Controllers
         [HttpPost]
         public async Task<string> Chat([FromBody] ChatRequest request, ChatHistoryProvider chatProvider, AgentsFactory factory, AgentLogger logger)
         {
-            var agent = await factory.CreateAgentAsync<OrchestratorAgent>();
+            var agent = await factory.CreateAgentAsync("OrchestratorAgent");
 
             var chat = chatProvider.GetChatHistory(request.SessionId);
             chat.AddMessage("user", request.Message);
