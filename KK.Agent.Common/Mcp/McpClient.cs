@@ -15,7 +15,7 @@ public class McpClient(ConfigMcpServer options)
 
     public void Start()
     {
-        var psi = new ProcessStartInfo
+        var processStartInfo = new ProcessStartInfo
         {
             FileName = options.Command,
             Arguments = options.Arguments,
@@ -25,17 +25,17 @@ public class McpClient(ConfigMcpServer options)
             UseShellExecute = options.UseShellExecute
         };
 
-        foreach (var kv in options.EnvironmentVariables)
+        foreach (var keyValuePair in options.EnvironmentVariables)
         {
-            psi.Environment[kv.Key] = kv.Value;
+            processStartInfo.Environment[keyValuePair.Key] = keyValuePair.Value;
         }
 
         if (!string.IsNullOrEmpty(options.WorkingDirectory))
         {
-            psi.WorkingDirectory = options.WorkingDirectory;
+            processStartInfo.WorkingDirectory = options.WorkingDirectory;
         }
 
-        _process = new Process { StartInfo = psi };
+        _process = new Process { StartInfo = processStartInfo };
         _process.Start();
     }
 

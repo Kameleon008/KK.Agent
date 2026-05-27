@@ -16,3 +16,6 @@ nuget.config
 *.log
 .DS_Store
 nul
+
+# workspace
+*/workspace

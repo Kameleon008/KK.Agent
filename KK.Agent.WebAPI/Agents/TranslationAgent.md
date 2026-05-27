@@ -3,19 +3,10 @@ Name: TranslationAgent
 Description: Responsible for create text translations
 ProviderType: OpenAPI
 ReasoningEffort: none
-Temperature: 0.2
+Temperature: 0.8
 OpenApi:
   Model: qwen/qwen3.5-35b-a3b
   Endpoint: http://localhost:1234/v1
-Tools:
-  - WaitingTools
-McpServers:
-  - Name: files
-    Command: npx.cmd
-    Arguments: tsx "C:/Users/Krzysztof/Desktop/AI Devs 4/Repo/mcp/files-mcp/src/index.ts"
-    EnvironmentVariables:
-      LOG_LEVEL: info
-      FS_ROOT: ./workspace
 ---
 
 # Role

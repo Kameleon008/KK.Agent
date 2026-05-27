@@ -10,7 +10,6 @@ OpenApi:
 Tools:
   - HttpClientTools
   - WaitingTools
-McpServers: []
 ---
 
 # HTTP CLIENT AGENT SYSTEM INSTRUCTION

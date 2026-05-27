@@ -16,6 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Agents\FileAgent.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Agents\SensorsAgent.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -11,13 +11,13 @@ namespace KK.Agent.Common.AgentEngine.FinishReasonHandlers
         {
             foreach (var toolCall in choice.Message.ToolCalls!)
             {
-                await logger.PublishAsync("Tool_Call", $"{caller} calls tool: {toolCall.Function!.Name}..., arguments: {toolCall.Function.Arguments}", string.Empty);
+                await logger.PublishReasoningAsync("Tool_Call", $"\n{caller} calls tool: {toolCall.Function!.Name}, \n\n{toolCall.Function.Arguments}");
 
                 if (toolsProvider.Tools.ContainsKey(toolCall.Function!.Name))
                 {
                     var result = await toolsProvider.Tools[toolCall.Function!.Name](toolCall.Function.Arguments);
 
-                    await logger.PublishAsync("Tool_Call", $"{caller} calls tool: {toolCall.Function!.Name}..., result: {result}", string.Empty);
+                    await logger.PublishReasoningAsync("Tool_Call_Result", $"\n{caller} calls tool: {toolCall.Function!.Name}, \n\n{result}");
 
                     history.Add(new ChatMessage
                     {
@@ -35,7 +35,7 @@ namespace KK.Agent.Common.AgentEngine.FinishReasonHandlers
 
                     var result = await toolsProvider.McpClients.First().CallToolAsync(toolCall.Function!.Name, toolCall.Function.Arguments);
 
-                    await logger.PublishAsync("Tool_Call_Result", $"\n result: {result}", string.Empty);
+                    await logger.PublishReasoningAsync("Tool_Call_Result", $"\n{caller} calls tool: {toolCall.Function!.Name}, \n\n{result}");
 
                     history.Add(new ChatMessage
                     {

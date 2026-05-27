@@ -19,6 +19,28 @@ namespace KK.Agent.Common.AgentEngine
             });
         }
 
+        public async Task PublishReasoningAsync(string agentId, string reasoning)
+        {
+            Console.WriteLine($"[AgentLogger] AgentId: {agentId}, Reasoning: {reasoning}, Content: {string.Empty}");
+            await _channel.Writer.WriteAsync(new AgentLoggerModel
+            {
+                AgentId = agentId,
+                Reasoning = reasoning,
+                Content = string.Empty
+            });
+        }
+
+        public async Task PublishContentAsync(string agentId, string content)
+        {
+            Console.WriteLine($"[AgentLogger] AgentId: {agentId}, Reasoning: {string.Empty}, Content: {content}");
+            await _channel.Writer.WriteAsync(new AgentLoggerModel
+            {
+                AgentId = agentId,
+                Reasoning = string.Empty,
+                Content = content
+            });
+        }
+
         public async IAsyncEnumerable<string> GetLogsAsync([EnumeratorCancellation] CancellationToken ct)
         {
             await foreach (var log in _channel.Reader.ReadAllAsync(ct))

@@ -9,7 +9,6 @@ OpenApi:
   Endpoint: http://localhost:1234/v1
 Tools:
   - ImageTools
-McpServers: []
 ---
 
 # Role

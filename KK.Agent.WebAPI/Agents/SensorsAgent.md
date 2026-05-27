@@ -7,7 +7,6 @@ Temperature: 0.8
 OpenApi:
   Model: qwen/qwen3.5-35b-a3b
   Endpoint: http://localhost:1234/v1
-Tools: []
 McpServers:
   - Name: test
     Command: dotnet
@@ -15,8 +14,8 @@ McpServers:
     EnvironmentVariables:
       ASPNETCORE_ENVIRONMENT: Development
   - Name: files
-    Command: npx.cmd
-    Arguments: tsx "C:/Users/Krzysztof/Desktop/AI Devs 4/Repo/mcp/files-mcp/src/index.ts"
+    Command: cmd.exe
+    Arguments: /c npx tsx "C:/Users/Krzysztof/Desktop/AI Devs 4/Repo/mcp/files-mcp/src/index.ts"
     EnvironmentVariables:
       LOG_LEVEL: info
       FS_ROOT: ./workspace
